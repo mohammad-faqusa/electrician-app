@@ -1,0 +1,81 @@
+const { app, BrowserWindow, ipcMain } = require("electron");
+const path = require("path");
+const axios = require("axios");
+const { io } = require("socket.io-client");
+
+let mainWindow;
+let socket = null;
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1000,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+    },
+  });
+
+  mainWindow.loadFile(path.join(__dirname, "renderer.html")); // default login page
+}
+
+app.whenReady().then(createWindow);
+
+// ✅ Login + socket + dashboard redirect
+ipcMain.handle("login", async (event, { email, password }) => {
+  try {
+    const response = await axios.post("http://localhost:3000/api/login", {
+      email,
+      password,
+    });
+
+    const jwtToken = response.data.token;
+
+    socket = io("http://localhost:3000/electron", {
+      transports: ["websocket"],
+      auth: {
+        token: jwtToken,
+      },
+    });
+
+    socket.on("connect", async () => {
+      console.log("✅ Electron socket connected:", socket.id);
+
+      // ✅ Load dashboard page in renderer
+      mainWindow.loadFile(path.join(__dirname, "dashboard.html")); // <-- your custom HTML file
+
+      try {
+        const devices = await socket.emitWithAck("fetchDevices", "all");
+        console.log("✅ Devices fetched:", devices);
+        // ✅ Send to renderer
+        mainWindow.webContents.once("did-finish-load", () => {
+          mainWindow.webContents.send("devices-data", devices);
+        });
+      } catch (err) {
+        console.error("❌ fetchDevices failed:", err);
+      }
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket error:", err.message);
+    });
+
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err.response?.data || err.message,
+    };
+  }
+});
+
+// Handle 'get-user-info' with acknowledgment
+ipcMain.handle("online-devices", async (event, data) => {
+  // simulate fetch from DB
+  // const user = { id: userId, name: "Mohammad", role: "Admin" };
+
+  const onlineDevices = await socket.emitWithAck("onlineDevices", "123");
+
+  return onlineDevices;
+  // return user;
+});
