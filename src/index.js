@@ -114,7 +114,9 @@ ipcMain.handle("addDevice_pList", async (event, data) => {
 });
 
 ipcMain.handle("addDevice", async (event, data) => {
+  console.log("this is add devcie request : ", data);
   const deviceId = await socket.emitWithAck("addDevice", data);
+  console.log("this is added devcie id to database", deviceId);
   return deviceId;
 });
 
@@ -125,4 +127,10 @@ ipcMain.on("disonnect", async (event, data) => {
 ipcMain.on("devicesPage", async (event, data) => {
   console.log(data);
   mainWindow.loadFile(path.join(__dirname, "dashboard.html"));
+});
+
+ipcMain.handle("addDeviceForm", async (event, data) => {
+  console.log(data);
+  data.electron = "electron";
+  return data;
 });
