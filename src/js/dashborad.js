@@ -75,3 +75,9 @@ function isDeviceActive(deviceId, onlineDevices, thresholdMs = 10000) {
 
   return Date.now() - lastSeen <= thresholdMs;
 }
+
+const addDeviceButton = document.getElementById("add-device-button");
+
+addDeviceButton.addEventListener("click", () => {
+  electronAPI.emit("addDevicePage", 123);
+});

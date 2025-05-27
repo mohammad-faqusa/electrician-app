@@ -56,6 +56,10 @@ ipcMain.handle("login", async (event, { email, password }) => {
       }
     });
 
+    socket.on("disconnect", async () => {
+      win.webContents.send("disconnect", 123);
+    });
+
     socket.on("connect_error", (err) => {
       console.error("Socket error:", err.message);
     });
@@ -90,4 +94,35 @@ ipcMain.handle("getConnections", async (event, data) => {
 
   return pinConnections;
   // return user;
+});
+// Handle move to add device page
+ipcMain.on("addDevicePage", async (event, data) => {
+  mainWindow.loadFile(path.join(__dirname, "addDevice.html"));
+});
+// Handle move to add device page
+ipcMain.handle("addDevicePage", async (event, data) => {
+  mainWindow.loadFile(path.join(__dirname, "addDevice.html"));
+
+  return;
+});
+
+//
+ipcMain.handle("addDevice_pList", async (event, data) => {
+  const pList = await socket.emitWithAck("addDevice_pList", data);
+  console.log("this is plist : ", pList);
+  return pList;
+});
+
+ipcMain.handle("addDevice", async (event, data) => {
+  const deviceId = await socket.emitWithAck("addDevice", data);
+  return deviceId;
+});
+
+ipcMain.on("disonnect", async (event, data) => {
+  socket.disconnect();
+});
+
+ipcMain.on("devicesPage", async (event, data) => {
+  console.log(data);
+  mainWindow.loadFile(path.join(__dirname, "dashboard.html"));
 });
