@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   on: (channel, callback) => {
     ipcRenderer.on(channel, (event, data) => callback(data));
   },
+
   // Emit message to main.js (fire-and-forget)
   emit: (channel, data) => {
     ipcRenderer.send(channel, data);

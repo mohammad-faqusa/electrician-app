@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("this page is loaded");
 
+  electronAPI.on("disconnect", (data) => {
+    console.log("Received disconnect event:", data);
+  });
+
   let selectedPeripherals = [];
   let lastFormData = null;
   let isDisconnected = false;
@@ -149,7 +153,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       `The device is added to the database, setup the device...`,
       "success"
     );
-    // socket.emit("setupDevice", deviceId);
+    electronAPI.emit("setupDevice", deviceId);
 
     electronAPI.on("processSetup", (res) => {
       addMessage(res.data, "success");

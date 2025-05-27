@@ -13,6 +13,7 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
+      nodeIntegration: false,
     },
   });
 
@@ -50,18 +51,33 @@ ipcMain.handle("login", async (event, { email, password }) => {
         // ✅ Send to renderer
         mainWindow.webContents.once("did-finish-load", () => {
           mainWindow.webContents.send("devices-data", devices);
+
+          socket.on("disconnect", async () => {
+            console.log("disconnected from the server");
+            mainWindow.webContents.send("disconnect", 123);
+          });
+
+          socket.on("connect_error", (err) => {
+            console.error("Socket error:", err.message);
+          });
+
+          socket.on("errorSetup", (err) => {
+            console.error("Socket error:", err.message);
+            mainWindow.webContents.send("errorSetup", 123);
+          });
+
+          socket.on("processSetup", (data) => {
+            console.log("here is the process setupt : ", data);
+            mainWindow.webContents.send("processSetup", data);
+          });
+
+          socket.on("hi-server", (data) => {
+            console.log(data);
+          });
         });
       } catch (err) {
         console.error("❌ fetchDevices failed:", err);
       }
-    });
-
-    socket.on("disconnect", async () => {
-      win.webContents.send("disconnect", 123);
-    });
-
-    socket.on("connect_error", (err) => {
-      console.error("Socket error:", err.message);
     });
 
     return { success: true };
@@ -106,7 +122,6 @@ ipcMain.handle("addDevicePage", async (event, data) => {
   return;
 });
 
-//
 ipcMain.handle("addDevice_pList", async (event, data) => {
   const pList = await socket.emitWithAck("addDevice_pList", data);
   console.log("this is plist : ", pList);
@@ -127,6 +142,12 @@ ipcMain.on("disonnect", async (event, data) => {
 ipcMain.on("devicesPage", async (event, data) => {
   console.log(data);
   mainWindow.loadFile(path.join(__dirname, "dashboard.html"));
+});
+
+ipcMain.on("setupDevice", async (event, data) => {
+  console.log("this is setup device emitting the socket ", data);
+  socket.emit("hi", "hi again from electron");
+  socket.emit("setupDevice", data);
 });
 
 ipcMain.handle("addDeviceForm", async (event, data) => {
