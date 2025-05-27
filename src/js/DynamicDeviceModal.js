@@ -264,5 +264,23 @@ class DynamicDeviceModal extends Modal {
     return Date.now() - lastSeen <= thresholdMs;
   }
 
-  async controlDevice() {}
+  async controlDevice() {
+    if (!this.device) return;
+
+    const controlButton = document.getElementById("device-modal-update");
+    controlButton.disabled = true;
+    if (this.device.status) {
+      console.log("here is the connected pins : ");
+      const deviceModal = new DynamicDeviceModal({ no_update: true });
+
+      electronAPI.emitWithAck("getConnections", this.device.id).then((data) => {
+        console.log("this is the recieved data : ");
+        console.log(data);
+        controlButton.disabled.false;
+        deviceModal.showConnections(data.join("\n"));
+      });
+    } else {
+      alert(`Attempting to restart ${this.device.name}...`);
+    }
+  }
 }

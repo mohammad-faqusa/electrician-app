@@ -69,7 +69,7 @@ ipcMain.handle("login", async (event, { email, password }) => {
   }
 });
 
-// Handle 'get-user-info' with acknowledgment
+// Handle 'online-devices' with acknowledgment
 ipcMain.handle("online-devices", async (event, data) => {
   // simulate fetch from DB
   // const user = { id: userId, name: "Mohammad", role: "Admin" };
@@ -77,5 +77,17 @@ ipcMain.handle("online-devices", async (event, data) => {
   const onlineDevices = await socket.emitWithAck("onlineDevices", "123");
 
   return onlineDevices;
+  // return user;
+});
+
+// Handle 'get-user-info' with acknowledgment
+ipcMain.handle("getConnections", async (event, data) => {
+  // simulate fetch from DB
+  // const user = { id: userId, name: "Mohammad", role: "Admin" };
+
+  const pinConnections = await socket.emitWithAck("getConnections", data);
+  console.log("here is pin connections : ", pinConnections);
+
+  return pinConnections;
   // return user;
 });
