@@ -9,14 +9,39 @@ document.addEventListener("DOMContentLoaded", async function () {
   let lastFormData = null;
   let isDisconnected = false;
 
+  const pList = await electronAPI.emitWithAck("addDevice_pList", "");
+
   const form = document.getElementById("peripheralForm");
   const selectedPeripheralsInput = document.getElementById(
     "selectedPeripherals"
   );
-  const addButton = document.getElementById("addPeripheral");
-  const peripheralSelect = document.getElementById("peripheral");
+
   const messageScreen = document.getElementById("messageScreen");
   const messageContent = document.getElementById("messageContent");
+  const pSelectContainer = document.querySelector(
+    ".peripheral-select-container"
+  );
+  const backToForm = document.getElementById("backToForm");
+  const cancelButton = document.getElementById("cancelButton");
+
+  pSelectContainer.innerHTML = `<select id="peripheral" name="peripheral">
+        ${pList
+          .map((p) => {
+            pName = p.includes("_")
+              ? p
+                  .split("_")
+                  .map((word) => word[0].toUpperCase() + word.slice(1))
+                  .join(" ")
+              : p[0].toUpperCase() + p.slice(1);
+            return `<option value="${p}">${pName}</option>`;
+          })
+          .join("\n")}
+    </select>
+    <button type="button" id="addPeripheral" class="btn-add">Add</button>
+    `;
+
+  const addButton = document.getElementById("addPeripheral");
+  const peripheralSelect = document.getElementById("peripheral");
 
   // Add peripheral to the list
   addButton.addEventListener("click", function () {
@@ -87,6 +112,25 @@ document.addEventListener("DOMContentLoaded", async function () {
 
       handleErrorAction(action, errorId);
     }
+  });
+
+  // Back to form button
+  backToForm.addEventListener("click", function () {
+    form.style.display = "block";
+    messageScreen.style.display = "none";
+  });
+
+  // Cancel button
+  cancelButton.addEventListener("click", function () {
+    // Reset form
+    form.reset();
+
+    // Clear peripheral list
+    peripheralList.innerHTML = "";
+    selectedPeripherals = [];
+    selectedPeripheralsInput.value = "";
+
+    electronAPI.emit("devicesPage", "");
   });
 
   // Process form submission

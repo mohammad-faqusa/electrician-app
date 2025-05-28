@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const axios = require("axios");
 const { io } = require("socket.io-client");
+const fs = require("fs");
 
 let mainWindow;
 let socket = null;
@@ -67,8 +68,19 @@ ipcMain.handle("login", async (event, { email, password }) => {
           });
 
           socket.on("processSetup", (data) => {
-            console.log("here is the process setupt : ", data);
-            mainWindow.webContents.send("processSetup", data);
+            console.log(data);
+            if (data.code) {
+              if (data.codeName === "main")
+                fs.writeFileSync("./main.py", data.code);
+              if (data.codeName === "boot")
+                fs.writeFileSync("./boot.py", data.code);
+              mainWindow.webContents.send("processSetup", {
+                data: data.data,
+                status: data.status,
+              });
+            } else {
+              mainWindow.webContents.send("processSetup", data);
+            }
           });
 
           socket.on("hi-server", (data) => {
@@ -91,35 +103,22 @@ ipcMain.handle("login", async (event, { email, password }) => {
 
 // Handle 'online-devices' with acknowledgment
 ipcMain.handle("online-devices", async (event, data) => {
-  // simulate fetch from DB
-  // const user = { id: userId, name: "Mohammad", role: "Admin" };
-
   const onlineDevices = await socket.emitWithAck("onlineDevices", "123");
 
   return onlineDevices;
-  // return user;
 });
 
 // Handle 'get-user-info' with acknowledgment
 ipcMain.handle("getConnections", async (event, data) => {
-  // simulate fetch from DB
-  // const user = { id: userId, name: "Mohammad", role: "Admin" };
-
   const pinConnections = await socket.emitWithAck("getConnections", data);
   console.log("here is pin connections : ", pinConnections);
 
   return pinConnections;
-  // return user;
 });
+
 // Handle move to add device page
 ipcMain.on("addDevicePage", async (event, data) => {
   mainWindow.loadFile(path.join(__dirname, "addDevice.html"));
-});
-// Handle move to add device page
-ipcMain.handle("addDevicePage", async (event, data) => {
-  mainWindow.loadFile(path.join(__dirname, "addDevice.html"));
-
-  return;
 });
 
 ipcMain.handle("addDevice_pList", async (event, data) => {
@@ -140,7 +139,6 @@ ipcMain.on("disonnect", async (event, data) => {
 });
 
 ipcMain.on("devicesPage", async (event, data) => {
-  console.log(data);
   mainWindow.loadFile(path.join(__dirname, "dashboard.html"));
 });
 
