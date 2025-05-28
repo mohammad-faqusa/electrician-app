@@ -1,0 +1,1299 @@
+[
+  {
+    "name": "accelerometer",
+    "title": "Accelerometer",
+    "library_name": "accelerometer",
+    "class_name": "MPU6050",
+    "attributes": {
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (random values returned)",
+          "false": "Reads actual sensor data via I2C"
+        },
+        "purpose": "Determines whether the sensor operates in simulation or real hardware mode"
+      },
+      "addr": {
+        "dataType": "Number",
+        "format": "hex",
+        "default": 104,
+        "purpose": "I2C address of the MPU6050 sensor"
+      },
+      "_accel": {
+        "dataType": "Array",
+        "elementType": "Number",
+        "length": 3,
+        "unit": "g",
+        "access": "read-only",
+        "purpose": "Holds acceleration values on X, Y, Z axes"
+      },
+      "_gyro": {
+        "dataType": "Array",
+        "elementType": "Number",
+        "length": 3,
+        "unit": "deg/s",
+        "access": "read-only",
+        "purpose": "Holds gyroscope angular velocity values on X, Y, Z axes"
+      }
+    },
+    "methods": {
+      "read_accel": {
+        "type": "read",
+        "label": "Read Acceleration",
+        "returns": {
+          "dataType": "Array",
+          "elementType": "Number",
+          "length": 3,
+          "unit": "g",
+          "elementNames": ["x", "y", "z"],
+          "range": {
+            "min": -2,
+            "max": 2
+          }
+        },
+        "purpose": "Returns a tuple of X, Y, Z acceleration values"
+      },
+      "read_gyro": {
+        "type": "read",
+        "label": "Read Gyroscope",
+        "returns": {
+          "dataType": "Array",
+          "elementType": "Number",
+          "length": 3,
+          "unit": "deg/s",
+          "elementNames": ["x", "y", "z"],
+          "range": {
+            "min": -250,
+            "max": 250
+          }
+        },
+        "purpose": "Returns a tuple of X, Y, Z gyroscope values"
+      },
+      "read_all": {
+        "type": "read",
+        "label": "Read All Sensors",
+        "returns": {
+          "dataType": "Object",
+          "properties": {
+            "accel": {
+              "dataType": "Array",
+              "elementType": "Number",
+              "length": 3,
+              "unit": "g",
+              "elementNames": ["x", "y", "z"],
+              "range": {
+                "min": -2,
+                "max": 2
+              }
+            },
+            "gyro": {
+              "dataType": "Array",
+              "elementType": "Number",
+              "length": 3,
+              "unit": "deg/s",
+              "elementNames": ["x", "y", "z"],
+              "range": {
+                "min": -250,
+                "max": 250
+              }
+            }
+          }
+        },
+        "purpose": "Returns both accelerometer and gyroscope readings in one call"
+      }
+    },
+    "constructor": {
+      "parameters": [
+        {
+          "name": "i2c",
+          "dataType": "Object",
+          "default": null,
+          "optional": true,
+          "purpose": "I2C bus instance used to communicate with the sensor"
+        },
+        {
+          "name": "addr",
+          "dataType": "Number",
+          "default": 104,
+          "prefix": "hex",
+          "range": {
+            "min": 0,
+            "max": 127
+          },
+          "purpose": "I2C address of the MPU6050 sensor (default is 0x68)"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Simulated data (random values)",
+            "false": "Real hardware readings"
+          },
+          "purpose": "Enables simulation mode if set to true"
+        }
+      ]
+    }
+  },
+  {
+    "name": "dht_sensor",
+    "title": "DHT Sensor",
+    "library_name": "dht_sensor",
+    "class_name": "DHTSensor",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the DHT sensor"
+      },
+      "sensor_type": {
+        "dataType": "String",
+        "default": "DHT22",
+        "allowedValues": ["DHT11", "DHT22"],
+        "purpose": "Specifies the type of DHT sensor being used"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (random temperature and humidity values)",
+          "false": "Reads actual data from the connected sensor"
+        },
+        "purpose": "Controls whether the sensor operates in simulation or real mode"
+      },
+      "_temp": {
+        "dataType": "Number",
+        "unit": "°C",
+        "access": "read-only",
+        "range": {
+          "min": -40,
+          "max": 125
+        },
+        "default": 0,
+        "purpose": "Latest measured temperature value. Valid range: -40°C to 125°C"
+      },
+      "_humidity": {
+        "dataType": "Number",
+        "unit": "%",
+        "access": "read-only",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "default": 0,
+        "purpose": "Latest measured humidity value. Valid range: 0% to 100%"
+      }
+    },
+    "methods": {
+      "measure": {
+        "type": "write",
+        "label": "Trigger Measurement",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Triggers the sensor to update temperature and humidity readings"
+      },
+      "temperature": {
+        "type": "read",
+        "label": "Read Temperature",
+        "returns": {
+          "dataType": "Number",
+          "unit": "°C",
+          "range": {
+            "min": -40,
+            "max": 125
+          }
+        },
+        "purpose": "Returns the last measured temperature value. Range: -40°C to 125°C"
+      },
+      "humidity": {
+        "type": "read",
+        "label": "Read Humidity",
+        "returns": {
+          "dataType": "Number",
+          "unit": "%",
+          "range": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        "purpose": "Returns the last measured humidity value. Range: 0% to 100%"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the DHT sensor (DHT11 or DHT22) with the specified GPIO pin, sensor type, and simulation mode.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number connected to the DHT sensor"
+        },
+        {
+          "name": "sensor_type",
+          "dataType": "String",
+          "default": "DHT22",
+          "allowedValues": ["DHT11", "DHT22"],
+          "purpose": "Specifies the type of DHT sensor being used"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Sensor data will be simulated using random values",
+            "false": "Sensor will read actual values via GPIO"
+          },
+          "purpose": "Controls whether the sensor operates in simulation or real mode"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "DHTSensor",
+        "purpose": "An instance of the DHTSensor class ready for measuring temperature and humidity"
+      }
+    }
+  },
+  {
+    "name": "encoder",
+    "title": "Encoder",
+    "library_name": "encoder",
+    "class_name": "Encoder",
+    "attributes": {
+      "pin_a": {
+        "dataType": "Number",
+        "purpose": "GPIO pin A for encoder signal input"
+      },
+      "pin_b": {
+        "dataType": "Number",
+        "purpose": "GPIO pin B for encoder signal input"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (position manually controlled via code)",
+          "false": "Reads real encoder signals from pins"
+        },
+        "purpose": "Determines whether encoder is in simulation or real hardware mode"
+      },
+      "_position": {
+        "dataType": "Number",
+        "access": "read-only",
+        "range": {
+          "min": null,
+          "max": null
+        },
+        "default": 0,
+        "purpose": "Current position of the encoder (increments/decrements on rotation)"
+      }
+    },
+    "methods": {
+      "get_position": {
+        "type": "read",
+        "label": "Get Position",
+        "returns": {
+          "dataType": "Number",
+          "range": {
+            "min": null,
+            "max": null
+          }
+        },
+        "purpose": "Returns the current position of the encoder"
+      },
+      "reset": {
+        "type": "write",
+        "label": "Reset Position",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Resets the encoder position back to zero"
+      },
+      "simulate_step": {
+        "type": "write",
+        "label": "Simulate Step",
+        "parameters": [
+          {
+            "name": "steps",
+            "dataType": "Number",
+            "range": {
+              "min": -1000,
+              "max": 1000
+            },
+            "purpose": "Number of steps to increment or decrement position (for simulate mode)"
+          }
+        ],
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Manually updates the encoder position during simulation mode",
+        "availability": "Only available when simulate=true"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the rotary encoder with two pins. Supports simulation or real hardware interrupts for position tracking.",
+      "parameters": [
+        {
+          "name": "pin_a",
+          "dataType": "Number",
+          "purpose": "GPIO pin connected to encoder channel A"
+        },
+        {
+          "name": "pin_b",
+          "dataType": "Number",
+          "purpose": "GPIO pin connected to encoder channel B"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Enables simulation mode, position can be changed manually",
+            "false": "Enables real hardware mode using interrupts on GPIO pins"
+          },
+          "purpose": "Controls whether the encoder operates in simulation or real mode"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "Encoder",
+        "purpose": "An instance of the Encoder class used to track rotary position"
+      }
+    }
+  },
+  {
+    "name": "gas_sensor",
+    "title": "Gas Sensor",
+    "library_name": "gas_sensor",
+    "class_name": "GasSensor",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the Gas sensor"
+      },
+      "analog": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Analog mode enabled (reads a range of values from 0 to 1023)",
+          "false": "Digital mode enabled (reads values 0 or 1)"
+        },
+        "purpose": "Specifies whether the sensor is working in analog or digital mode"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (random gas level values)",
+          "false": "Reads actual data from the connected sensor"
+        },
+        "purpose": "Controls whether the sensor operates in simulation or real mode"
+      },
+      "_gas_level": {
+        "dataType": "Number",
+        "access": "read-only",
+        "range": {
+          "min": 0,
+          "max": 1023
+        },
+        "default": 0,
+        "purpose": "Latest gas level reading. Range: 0 to 1023 (for analog mode) or 0/1 (for digital mode)"
+      }
+    },
+    "methods": {
+      "read": {
+        "type": "read",
+        "label": "Read Gas Level",
+        "returns": {
+          "dataType": "Number",
+          "range": {
+            "min": 0,
+            "max": 1023
+          }
+        },
+        "purpose": "Reads the current gas level from the sensor. Range: 0 to 1023 (analog) or 0/1 (digital)"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the gas sensor, either in simulation mode or using a real analog/digital input pin.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number to which the gas sensor is connected"
+        },
+        {
+          "name": "analog",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Uses analog pin and ADC to read varying gas levels",
+            "false": "Uses digital pin to detect gas presence (binary value)"
+          },
+          "purpose": "Determines if the sensor is analog or digital"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Sensor values are simulated randomly",
+            "false": "Reads actual values from the connected hardware"
+          },
+          "purpose": "Controls whether the sensor operates in simulation or real mode"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "GasSensor",
+        "purpose": "An instance of the GasSensor class ready for reading gas levels"
+      }
+    }
+  },
+  {
+    "name": "led",
+    "title": "Led",
+    "library_name": "led",
+    "class_name": "LED",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the LED"
+      },
+      "active_high": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "LED is turned ON when pin is high (1)",
+          "false": "LED is turned ON when pin is low (0)"
+        },
+        "purpose": "Determines if the LED is active high or low"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (LED behavior simulated)",
+          "false": "Controls an actual LED on the connected GPIO pin"
+        },
+        "purpose": "Controls whether the LED operates in simulation or real mode"
+      },
+      "_state": {
+        "dataType": "Boolean",
+        "access": "read-only",
+        "default": false,
+        "values_meaning": {
+          "true": "LED is ON",
+          "false": "LED is OFF"
+        },
+        "purpose": "Tracks the current state of the LED (ON/OFF)"
+      }
+    },
+    "methods": {
+      "on": {
+        "type": "write",
+        "label": "Turn ON",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Turns the LED ON (sets the state to ON)"
+      },
+      "off": {
+        "type": "write",
+        "label": "Turn OFF",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Turns the LED OFF (sets the state to OFF)"
+      },
+      "toggle": {
+        "type": "write",
+        "label": "Toggle",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Toggles the state of the LED (ON if OFF, OFF if ON)"
+      },
+      "is_on": {
+        "type": "read",
+        "label": "Check if ON",
+        "returns": {
+          "dataType": "Boolean"
+        },
+        "purpose": "Returns the current state of the LED (True if ON, False if OFF)"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the LED object to control a digital output pin, either in simulation or hardware mode.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number connected to the LED"
+        },
+        {
+          "name": "active_high",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "LED turns ON when the GPIO pin is set HIGH",
+            "false": "LED turns ON when the GPIO pin is set LOW"
+          },
+          "purpose": "Controls whether the LED is active-high or active-low"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Simulated LED behavior (no real hardware interaction)",
+            "false": "Real LED control via hardware GPIO"
+          },
+          "purpose": "Enables or disables simulation mode"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "LED",
+        "purpose": "An instance of the LED class ready for digital output control"
+      }
+    }
+  },
+  {
+    "name": "internal_led",
+    "title": "Internal Led",
+    "library_name": "led",
+    "class_name": "InternalLED",
+    "inherited_from": "LED",
+    "attributes": {
+      "simulate": {
+        "dataType": "Boolean",
+        "default": false,
+        "values_meaning": {
+          "true": "Simulation mode enabled (LED behavior simulated)",
+          "false": "Controls an actual internal LED on GPIO2"
+        },
+        "purpose": "Controls whether the internal LED operates in simulation or real mode"
+      }
+    },
+    "methods": {
+      "on": {
+        "type": "write",
+        "label": "Turn ON",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Turns the LED ON (sets the state to ON)"
+      },
+      "off": {
+        "type": "write",
+        "label": "Turn OFF",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Turns the LED OFF (sets the state to OFF)"
+      },
+      "toggle": {
+        "type": "write",
+        "label": "Toggle",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Toggles the state of the LED (ON if OFF, OFF if ON)"
+      },
+      "is_on": {
+        "type": "read",
+        "label": "Check if ON",
+        "returns": {
+          "dataType": "Boolean"
+        },
+        "purpose": "Returns the current state of the LED (True if ON, False if OFF)"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the internal LED, typically connected to GPIO2 on ESP32 boards. Inherits behavior from the LED base class.",
+      "parameters": [
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": false,
+          "values_meaning": {
+            "true": "LED behavior will be simulated with print statements instead of real hardware interaction",
+            "false": "Controls the actual onboard LED"
+          },
+          "purpose": "Determines whether the internal LED runs in simulation mode or hardware mode"
+        }
+      ],
+      "inherits_from": "LED",
+      "inherited_parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "default": 2,
+          "purpose": "GPIO pin number for the internal LED (fixed to 2 for ESP32)"
+        },
+        {
+          "name": "active_high",
+          "dataType": "Boolean",
+          "default": true,
+          "purpose": "Indicates if the LED turns on with a HIGH signal"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "InternalLED",
+        "purpose": "An instance of InternalLED, ready to be turned on or off"
+      }
+    }
+  },
+  {
+    "name": "motion_sensor",
+    "title": "Motion Sensor",
+    "library_name": "motion_sensor",
+    "class_name": "MotionSensor",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the Motion sensor (PIR)"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (random motion detection)",
+          "false": "Reads actual motion data from the connected sensor"
+        },
+        "purpose": "Controls whether the sensor operates in simulation or real mode"
+      },
+      "_motion_detected": {
+        "dataType": "Boolean",
+        "access": "read-only",
+        "values_meaning": {
+          "true": "Motion detected",
+          "false": "No motion detected"
+        },
+        "purpose": "Indicates whether motion has been detected or not"
+      }
+    },
+    "methods": {
+      "read": {
+        "type": "read",
+        "label": "Read Motion State",
+        "returns": {
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "Motion detected",
+            "false": "No motion detected"
+          }
+        },
+        "purpose": "Reads the current state of the motion sensor"
+      },
+      "wait_for_motion": {
+        "type": "write",
+        "label": "Wait for Motion",
+        "returns": {
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "Motion detected within timeout",
+            "false": "No motion detected within timeout"
+          }
+        },
+        "parameters": [
+          {
+            "name": "timeout",
+            "dataType": "Number",
+            "default": 10,
+            "unit": "seconds",
+            "range": {
+              "min": 0,
+              "max": 300
+            },
+            "purpose": "Timeout duration to wait for motion detection"
+          }
+        ],
+        "purpose": "Waits for motion detection for a specified timeout period"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the motion sensor for detecting motion either in simulation mode or using a real GPIO pin.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number connected to the motion sensor"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Sensor data will be simulated (random motion values)",
+            "false": "Reads actual motion detection data from the connected pin"
+          },
+          "purpose": "Whether to operate in simulation mode or real mode"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "MotionSensor",
+        "purpose": "An instance of the MotionSensor class ready for detecting motion"
+      }
+    }
+  },
+  {
+    "name": "push_button",
+    "title": "Push Button",
+    "library_name": "push_button",
+    "class_name": "PushButton",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the PushButton"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (manual control of button state)",
+          "false": "Reads actual state from the physical button"
+        },
+        "purpose": "Controls whether the button operates in simulation or real mode"
+      },
+      "debounce_ms": {
+        "dataType": "Number",
+        "default": 50,
+        "range": {
+          "min": 0,
+          "max": 500
+        },
+        "purpose": "Debounce time in milliseconds to prevent false triggering from button presses"
+      },
+      "_last_state": {
+        "dataType": "Boolean",
+        "access": "read-only",
+        "purpose": "Stores the last known state of the button (True = pressed, False = released)"
+      },
+      "_last_time": {
+        "dataType": "Number",
+        "access": "read-only",
+        "purpose": "Stores the last time the button state was changed (in ms)"
+      },
+      "_simulated_state": {
+        "dataType": "Boolean",
+        "access": "read-write",
+        "purpose": "Used only in simulation mode to manually control the button state"
+      },
+      "was_pressed": {
+        "dataType": "Boolean",
+        "access": "read-only",
+        "purpose": "Indicates whether the button was pressed (can be used to detect button press events)"
+      }
+    },
+    "methods": {
+      "set_simulated_state": {
+        "type": "write",
+        "label": "Set Simulated State",
+        "parameters": [
+          {
+            "name": "pressed",
+            "dataType": "Boolean",
+            "values_meaning": {
+              "true": "Simulates button pressed",
+              "false": "Simulates button released"
+            },
+            "purpose": "Sets the simulated state of the button (only used in simulation mode)"
+          }
+        ],
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Sets the simulated button state"
+      },
+      "is_pressed": {
+        "type": "read",
+        "label": "Is Pressed",
+        "returns": {
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "Button is pressed",
+            "false": "Button is released"
+          }
+        },
+        "purpose": "Checks if the button is pressed or released, applies debounce logic"
+      },
+      "push": {
+        "type": "write",
+        "label": "Push Button",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Simulates a button press and release cycle (only for simulation mode)"
+      },
+      "get_event": {
+        "type": "read",
+        "label": "Get Event",
+        "returns": {
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "Button was pressed",
+            "false": "No button press detected"
+          }
+        },
+        "purpose": "Returns and clears the `was_pressed` flag indicating whether the button was pressed"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes a push button instance, optionally in simulation mode, with support for debounce handling.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number connected to the push button"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Button state is simulated",
+            "false": "Button state is read from the physical hardware pin"
+          },
+          "purpose": "Specifies whether the button is in simulation mode"
+        },
+        {
+          "name": "debounce_ms",
+          "dataType": "Number",
+          "default": 50,
+          "unit": "ms",
+          "range": {
+            "min": 0,
+            "max": 1000
+          },
+          "purpose": "Debounce duration to prevent false multiple button presses"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "PushButton",
+        "purpose": "An instance of the PushButton class ready for state reading and event handling"
+      }
+    }
+  },
+  {
+    "name": "relay",
+    "title": "Relay",
+    "library_name": "relay",
+    "class_name": "Relay",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the Relay module"
+      },
+      "active_high": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Relay is active when set to HIGH",
+          "false": "Relay is active when set to LOW"
+        },
+        "purpose": "Defines whether the relay is activated when the pin is HIGH or LOW"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (manual relay state control)",
+          "false": "Controls actual relay hardware connected to the pin"
+        },
+        "purpose": "Controls whether the relay operates in simulation or real mode"
+      },
+      "_state": {
+        "dataType": "Boolean",
+        "access": "read-only",
+        "default": false,
+        "values_meaning": {
+          "true": "Relay is ON",
+          "false": "Relay is OFF"
+        },
+        "purpose": "Stores the current state of the relay (ON or OFF)"
+      }
+    },
+    "methods": {
+      "on": {
+        "type": "write",
+        "label": "Turn On Relay",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Turns the relay ON (sets pin to HIGH or LOW based on active_high)"
+      },
+      "off": {
+        "type": "write",
+        "label": "Turn Off Relay",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Turns the relay OFF (sets pin to LOW or HIGH based on active_high)"
+      },
+      "toggle": {
+        "type": "write",
+        "label": "Toggle Relay State",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Toggles the relay state between ON and OFF"
+      },
+      "is_on": {
+        "type": "read",
+        "label": "Check Relay State",
+        "returns": {
+          "dataType": "Boolean"
+        },
+        "purpose": "Returns the current state of the relay (True if ON, False if OFF)"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the Relay, sets up control pin behavior and simulation mode.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "required": true,
+          "purpose": "GPIO pin number connected to the relay control input"
+        },
+        {
+          "name": "active_high",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Relay is activated when the pin is set to HIGH",
+            "false": "Relay is activated when the pin is set to LOW"
+          },
+          "purpose": "Determines the logic level that activates the relay"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Relay behavior is simulated with console output",
+            "false": "Relay controls actual GPIO pin"
+          },
+          "purpose": "Controls whether the relay operates in simulation or real mode"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "Relay",
+        "purpose": "An instance of the Relay class ready to control relay operations"
+      }
+    }
+  },
+  {
+    "name": "servo_motor",
+    "title": "Servo Motor",
+    "library_name": "servo_motor",
+    "class_name": "Servo",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the Servo motor"
+      },
+      "freq": {
+        "dataType": "Number",
+        "default": 50,
+        "range": {
+          "min": 1,
+          "max": 1000
+        },
+        "unit": "Hz",
+        "purpose": "Frequency for controlling the servo motor (default is 50Hz)"
+      },
+      "min_us": {
+        "dataType": "Number",
+        "default": 500,
+        "range": {
+          "min": 0,
+          "max": 2000
+        },
+        "unit": "μs",
+        "purpose": "Minimum pulse width in microseconds"
+      },
+      "max_us": {
+        "dataType": "Number",
+        "default": 2500,
+        "range": {
+          "min": 2000,
+          "max": 5000
+        },
+        "unit": "μs",
+        "purpose": "Maximum pulse width in microseconds"
+      },
+      "angle_range": {
+        "dataType": "Number",
+        "default": 180,
+        "range": {
+          "min": 0,
+          "max": 360
+        },
+        "unit": "°",
+        "purpose": "Range of motion of the servo motor in degrees"
+      },
+      "_angle": {
+        "dataType": "Number",
+        "default": 0,
+        "range": {
+          "min": 0,
+          "max": 180
+        },
+        "unit": "°",
+        "access": "read-only",
+        "purpose": "Current angle of the servo motor, ranging from 0° to 180°"
+      },
+      "_pulse_us": {
+        "dataType": "Number",
+        "default": 500,
+        "unit": "μs",
+        "access": "read-only",
+        "purpose": "Current pulse width in microseconds corresponding to the angle"
+      }
+    },
+    "methods": {
+      "write_angle": {
+        "type": "write",
+        "label": "Write Angle",
+        "parameters": [
+          {
+            "name": "angle",
+            "dataType": "Number",
+            "range": {
+              "min": 0,
+              "max": 180
+            },
+            "unit": "°",
+            "purpose": "Sets the servo motor to a specific angle, from 0° to 180°. The value must be between 0 and 180."
+          }
+        ],
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Sets the servo motor's angle by calculating the corresponding pulse width"
+      },
+      "write_us": {
+        "type": "write",
+        "label": "Write Pulse Width",
+        "parameters": [
+          {
+            "name": "us",
+            "dataType": "Number",
+            "range": {
+              "min": 500,
+              "max": 2500
+            },
+            "unit": "μs",
+            "purpose": "Sets the servo motor's pulse width directly in microseconds. The value must be between 500 and 2500 μs."
+          }
+        ],
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Sets the servo motor's pulse width directly in microseconds and updates the angle"
+      },
+      "read_angle": {
+        "type": "read",
+        "label": "Read Angle",
+        "returns": {
+          "dataType": "Number",
+          "range": {
+            "min": 0,
+            "max": 180
+          },
+          "unit": "°",
+          "purpose": "Returns the current angle of the servo motor, between 0° and 180°"
+        },
+        "purpose": "Returns the current angle of the servo motor"
+      },
+      "read_us": {
+        "type": "read",
+        "label": "Read Pulse Width",
+        "returns": {
+          "dataType": "Number",
+          "range": {
+            "min": 500,
+            "max": 2500
+          },
+          "unit": "μs",
+          "purpose": "Returns the current pulse width of the servo motor, between 500μs and 2500μs"
+        },
+        "purpose": "Returns the current pulse width of the servo motor"
+      },
+      "deinit": {
+        "type": "write",
+        "label": "Deinitialize",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Deinitializes the servo motor and releases resources"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes a Servo motor by setting up the PWM configuration for angle control.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number connected to the Servo motor"
+        },
+        {
+          "name": "freq",
+          "dataType": "Number",
+          "default": 50,
+          "range": {
+            "min": 1,
+            "max": 1000
+          },
+          "unit": "Hz",
+          "purpose": "PWM frequency for the servo control signal (default is 50Hz)"
+        },
+        {
+          "name": "min_us",
+          "dataType": "Number",
+          "default": 500,
+          "range": {
+            "min": 0,
+            "max": 2000
+          },
+          "unit": "μs",
+          "purpose": "Minimum pulse width in microseconds, corresponding to 0° angle"
+        },
+        {
+          "name": "max_us",
+          "dataType": "Number",
+          "default": 2500,
+          "range": {
+            "min": 2000,
+            "max": 5000
+          },
+          "unit": "μs",
+          "purpose": "Maximum pulse width in microseconds, corresponding to max angle"
+        },
+        {
+          "name": "angle_range",
+          "dataType": "Number",
+          "default": 180,
+          "range": {
+            "min": 0,
+            "max": 360
+          },
+          "unit": "°",
+          "purpose": "Range of servo motion in degrees"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "Servo",
+        "purpose": "An instance of the Servo class ready to control the motor angle"
+      }
+    }
+  },
+  {
+    "name": "slide_switch",
+    "title": "Slide Switch",
+    "library_name": "slide_switch",
+    "class_name": "SlideSwitch",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the slide switch"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (state is manually set)",
+          "false": "Reads actual hardware pin state"
+        },
+        "purpose": "Controls whether the switch operates in simulation or real mode"
+      },
+      "_state": {
+        "dataType": "Boolean",
+        "default": false,
+        "access": "read-write",
+        "values_meaning": {
+          "true": "Switch is ON",
+          "false": "Switch is OFF"
+        },
+        "purpose": "Internal switch state when in simulation mode"
+      }
+    },
+    "methods": {
+      "set_simulated_state": {
+        "type": "write",
+        "label": "Set Simulated State",
+        "parameters": [
+          {
+            "name": "state",
+            "dataType": "Boolean",
+            "values_meaning": {
+              "true": "Simulates turning the switch ON",
+              "false": "Simulates turning the switch OFF"
+            },
+            "purpose": "Controls the simulated state of the switch"
+          }
+        ],
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Sets the internal state of the switch during simulation"
+      },
+      "read": {
+        "type": "read",
+        "label": "Read Switch State",
+        "returns": {
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "Switch is ON",
+            "false": "Switch is OFF"
+          }
+        },
+        "purpose": "Reads the current switch state (either simulated or from the actual pin)"
+      },
+      "state": {
+        "type": "read",
+        "label": "State Alias",
+        "returns": {
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "Switch is ON",
+            "false": "Switch is OFF"
+          }
+        },
+        "purpose": "Property alias for reading the switch state"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the SlideSwitch on the given GPIO pin. Can operate in real or simulated mode.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number to which the slide switch is connected"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Simulated mode enabled; state changes can be simulated programmatically",
+            "false": "Reads the actual hardware state of the slide switch"
+          },
+          "purpose": "Determines whether the switch operates in simulation or real hardware mode"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "SlideSwitch",
+        "purpose": "An instance of the SlideSwitch class ready for use"
+      }
+    }
+  }
+]

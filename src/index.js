@@ -3,9 +3,12 @@ const path = require("path");
 const axios = require("axios");
 const { io } = require("socket.io-client");
 const fs = require("fs");
+const espSetup = require("./../esp32/espSetup");
 
 let mainWindow;
 let socket = null;
+let currentSelectedPeripherals = [];
+let currentDeviceId = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -48,7 +51,6 @@ ipcMain.handle("login", async (event, { email, password }) => {
 
       try {
         const devices = await socket.emitWithAck("fetchDevices", "all");
-        console.log("✅ Devices fetched:", devices);
         // ✅ Send to renderer
         mainWindow.webContents.once("did-finish-load", () => {
           mainWindow.webContents.send("devices-data", devices);
@@ -68,19 +70,38 @@ ipcMain.handle("login", async (event, { email, password }) => {
           });
 
           socket.on("processSetup", (data) => {
-            console.log(data);
             if (data.code) {
               if (data.codeName === "main")
-                fs.writeFileSync("./main.py", data.code);
+                fs.writeFileSync(
+                  path.join(__dirname, "/../esp32/main.py"),
+                  data.code
+                );
               if (data.codeName === "boot")
-                fs.writeFileSync("./boot.py", data.code);
+                fs.writeFileSync(
+                  path.join(__dirname, "/../esp32/boot.py"),
+                  data.code
+                );
               mainWindow.webContents.send("processSetup", {
                 data: data.data,
                 status: data.status,
               });
+            } else if (data.final) {
+              mainWindow.webContents.send("processSetup", {
+                data: data.data,
+                status: data.status,
+              });
+              espSetup(
+                currentDeviceId,
+                currentSelectedPeripherals,
+                mainWindow.webContents
+              );
             } else {
               mainWindow.webContents.send("processSetup", data);
             }
+          });
+
+          socket.on("deviceIndex", (deviceId) => {
+            currentDeviceId = deviceId;
           });
 
           socket.on("hi-server", (data) => {
@@ -104,15 +125,12 @@ ipcMain.handle("login", async (event, { email, password }) => {
 // Handle 'online-devices' with acknowledgment
 ipcMain.handle("online-devices", async (event, data) => {
   const onlineDevices = await socket.emitWithAck("onlineDevices", "123");
-
   return onlineDevices;
 });
 
 // Handle 'get-user-info' with acknowledgment
 ipcMain.handle("getConnections", async (event, data) => {
   const pinConnections = await socket.emitWithAck("getConnections", data);
-  console.log("here is pin connections : ", pinConnections);
-
   return pinConnections;
 });
 
@@ -123,14 +141,12 @@ ipcMain.on("addDevicePage", async (event, data) => {
 
 ipcMain.handle("addDevice_pList", async (event, data) => {
   const pList = await socket.emitWithAck("addDevice_pList", data);
-  console.log("this is plist : ", pList);
   return pList;
 });
 
 ipcMain.handle("addDevice", async (event, data) => {
-  console.log("this is add devcie request : ", data);
+  currentSelectedPeripherals = data.peripherals;
   const deviceId = await socket.emitWithAck("addDevice", data);
-  console.log("this is added devcie id to database", deviceId);
   return deviceId;
 });
 
@@ -143,13 +159,5 @@ ipcMain.on("devicesPage", async (event, data) => {
 });
 
 ipcMain.on("setupDevice", async (event, data) => {
-  console.log("this is setup device emitting the socket ", data);
-  socket.emit("hi", "hi again from electron");
   socket.emit("setupDevice", data);
-});
-
-ipcMain.handle("addDeviceForm", async (event, data) => {
-  console.log(data);
-  data.electron = "electron";
-  return data;
 });

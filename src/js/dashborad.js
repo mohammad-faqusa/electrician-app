@@ -49,14 +49,18 @@ function openOnClick(devices) {
 
 const displayInterval = setInterval(async () => {
   const onlineDevices = await electronAPI.emitWithAck("online-devices", 123);
+  console.log(onlineDevices);
   renderDevicesStatus(devices, onlineDevices);
 }, 4000);
 
 function renderDevicesStatus(devices, onlineDevices) {
   devices.forEach((device) => {
+    console.log("this is device id : ", device.id);
+    console.log("this is online devices : ", onlineDevices);
     device.status = isDeviceActive(device.id, onlineDevices)
       ? "online"
       : "offline";
+    console.log(device.status);
     const status = document.querySelector(
       `#device-card-${device.id} .device-status`
     );
@@ -71,8 +75,9 @@ function renderDevicesStatus(devices, onlineDevices) {
 
 function isDeviceActive(deviceId, onlineDevices, thresholdMs = 10000) {
   const lastSeen = onlineDevices[deviceId];
+  console.log("this is last seen : ", lastSeen);
   if (!lastSeen) return false;
-
+  console.log(Date.now() - lastSeen);
   return Date.now() - lastSeen <= thresholdMs;
 }
 
