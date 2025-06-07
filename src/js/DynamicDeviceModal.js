@@ -57,6 +57,25 @@ class DynamicDeviceModal extends Modal {
       .join(" "); // Join words back into a single string
   }
 
+  async showempty() {
+    this.update({ title: "Loading Connection details" });
+    const contentContainer = document.createElement("div");
+
+    contentContainer.innerHTML = "";
+
+    const fieldElement = this.renderField(
+      "loading",
+      "loading the connection pins "
+    );
+    if (fieldElement) {
+      contentContainer.appendChild(fieldElement);
+    }
+
+    this.setContent(contentContainer);
+
+    this.open();
+  }
+
   async showConnections(
     data = `
         1- connect the vss of esp to volate pin of dht 
@@ -272,8 +291,9 @@ class DynamicDeviceModal extends Modal {
     if (this.device.status) {
       console.log("here is the connected pins : ");
       const deviceModal = new DynamicDeviceModal({ no_update: true });
-
+      deviceModal.showempty();
       electronAPI.emitWithAck("getConnections", this.device.id).then((data) => {
+        deviceModal.close();
         console.log("this is the recieved data : ");
         console.log(data);
         controlButton.disabled.false;

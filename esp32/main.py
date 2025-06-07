@@ -1,26 +1,16 @@
-from dht_sensor import DHTSensor
 from led import InternalLED
-from servo_motor import Servo
 
-# Define peripheral pins dictionary
-peripherals_pins = {
-    "dht_sensor": {"pin": 4},
-    "internal_led": {},  # Internal LED doesn't need explicit pin assignment
-    "servo_motor": {"pin_id": 13}
-}
+# Initialize peripherals pins dictionary
+peripherals_pins = {}
 
-# Initialize peripherals
+# Initialize peripherals dictionary
 peripherals = {}
-peripherals["dht_sensor"] = DHTSensor(pin=peripherals_pins["dht_sensor"]["pin"], sensor_type="DHT22", simulate=True)
+
+# Initialize internal LED
 peripherals["internal_led"] = InternalLED(simulate=False)
-peripherals["servo_motor"] = Servo(
-    pin_id=peripherals_pins["servo_motor"]["pin_id"],
-    min_us=544,
-    max_us=2400,
-    min_deg=0,
-    max_deg=180,
-    freq=50
-)
+
+# Store connected pins for internal LED
+peripherals_pins["internal_led"] = {}
 
 import json
 
@@ -53,7 +43,7 @@ async def async_callback(topic, msg, retained):
         result['pins'] = peripherals_pins
         result['status'] = True
         result['commandId'] = msg['commandId']
-        await client.publish('esp32/6/sender', '{}'.format(json.dumps(result)), qos = 1)
+        await client.publish('esp32/7/sender', '{}'.format(json.dumps(result)), qos = 1)
         print("this is pins")
         return  # ✅ Terminate early
      
@@ -67,10 +57,10 @@ async def async_callback(topic, msg, retained):
     result['status'] = True
     result['commandId'] = msg['commandId']
 
-    await client.publish('esp32/6/sender', '{}'.format(json.dumps(result)), qos = 1)
+    await client.publish('esp32/7/sender', '{}'.format(json.dumps(result)), qos = 1)
 
 async def conn_han(client):
-    await client.subscribe('esp32/6/receiver', 1)
+    await client.subscribe('esp32/7/receiver', 1)
     
 async def main(client):
     await client.connect()
@@ -80,7 +70,7 @@ async def main(client):
 
     n = 0
     esp_status = {}
-    esp_status['id'] = 6
+    esp_status['id'] = 7
 
     while True:
         await asyncio.sleep(1)

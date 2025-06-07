@@ -2,12 +2,25 @@ onlineDevices = {};
 
 let devices = [];
 
-window.electronAPI.onDevices((receivedDevices) => {
+(async () => {
+  const receivedDevices = await electronAPI.emitWithAck("fetchDevices");
   devices = receivedDevices;
   renderCards(devices);
 
   openOnClick(devices);
+})();
+
+// window.electronAPI.on((receivedDevices) => {
+//   devices = receivedDevices;
+//   renderCards(devices);
+
+//   openOnClick(devices);
+// });
+window.electronAPI.on("hello", (receivedDevices) => {
+  console.log(receivedDevices);
 });
+
+electronAPI.emit("devices-list", "hi from the client");
 
 function renderCards(devices) {
   const deviceGrid = document.querySelector(".device-grid");

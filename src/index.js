@@ -49,68 +49,58 @@ ipcMain.handle("login", async (event, { email, password }) => {
       // ✅ Load dashboard page in renderer
       mainWindow.loadFile(path.join(__dirname, "dashboard.html")); // <-- your custom HTML file
 
-      try {
-        const devices = await socket.emitWithAck("fetchDevices", "all");
-        // ✅ Send to renderer
-        mainWindow.webContents.once("did-finish-load", () => {
-          mainWindow.webContents.send("devices-data", devices);
+      socket.on("disconnect", async () => {
+        console.log("disconnected from the server");
+        mainWindow.webContents.send("disconnect", 123);
+      });
 
-          socket.on("disconnect", async () => {
-            console.log("disconnected from the server");
-            mainWindow.webContents.send("disconnect", 123);
-          });
+      socket.on("connect_error", (err) => {
+        console.error("Socket error:", err.message);
+      });
 
-          socket.on("connect_error", (err) => {
-            console.error("Socket error:", err.message);
-          });
+      socket.on("errorSetup", (err) => {
+        console.error("Socket error:", err.message);
+        mainWindow.webContents.send("errorSetup", 123);
+      });
 
-          socket.on("errorSetup", (err) => {
-            console.error("Socket error:", err.message);
-            mainWindow.webContents.send("errorSetup", 123);
+      socket.on("processSetup", (data) => {
+        if (data.code) {
+          if (data.codeName === "main")
+            fs.writeFileSync(
+              path.join(__dirname, "/../esp32/main.py"),
+              data.code
+            );
+          if (data.codeName === "boot")
+            fs.writeFileSync(
+              path.join(__dirname, "/../esp32/boot.py"),
+              data.code
+            );
+          mainWindow.webContents.send("processSetup", {
+            data: data.data,
+            status: data.status,
           });
+        } else if (data.final) {
+          mainWindow.webContents.send("processSetup", {
+            data: data.data,
+            status: data.status,
+          });
+          espSetup(
+            currentDeviceId,
+            currentSelectedPeripherals,
+            mainWindow.webContents
+          );
+        } else {
+          mainWindow.webContents.send("processSetup", data);
+        }
+      });
 
-          socket.on("processSetup", (data) => {
-            if (data.code) {
-              if (data.codeName === "main")
-                fs.writeFileSync(
-                  path.join(__dirname, "/../esp32/main.py"),
-                  data.code
-                );
-              if (data.codeName === "boot")
-                fs.writeFileSync(
-                  path.join(__dirname, "/../esp32/boot.py"),
-                  data.code
-                );
-              mainWindow.webContents.send("processSetup", {
-                data: data.data,
-                status: data.status,
-              });
-            } else if (data.final) {
-              mainWindow.webContents.send("processSetup", {
-                data: data.data,
-                status: data.status,
-              });
-              espSetup(
-                currentDeviceId,
-                currentSelectedPeripherals,
-                mainWindow.webContents
-              );
-            } else {
-              mainWindow.webContents.send("processSetup", data);
-            }
-          });
+      socket.on("deviceIndex", (deviceId) => {
+        currentDeviceId = deviceId;
+      });
 
-          socket.on("deviceIndex", (deviceId) => {
-            currentDeviceId = deviceId;
-          });
-
-          socket.on("hi-server", (data) => {
-            console.log(data);
-          });
-        });
-      } catch (err) {
-        console.error("❌ fetchDevices failed:", err);
-      }
+      socket.on("hi-server", (data) => {
+        console.log(data);
+      });
     });
 
     return { success: true };
@@ -138,6 +128,9 @@ ipcMain.handle("getConnections", async (event, data) => {
 ipcMain.on("addDevicePage", async (event, data) => {
   mainWindow.loadFile(path.join(__dirname, "addDevice.html"));
 });
+ipcMain.on("hi", async (event, data) => {
+  mainWindow.webContents.send("hello", 123);
+});
 
 ipcMain.handle("addDevice_pList", async (event, data) => {
   const pList = await socket.emitWithAck("addDevice_pList", data);
@@ -148,6 +141,10 @@ ipcMain.handle("addDevice", async (event, data) => {
   currentSelectedPeripherals = data.peripherals;
   const deviceId = await socket.emitWithAck("addDevice", data);
   return deviceId;
+});
+ipcMain.handle("fetchDevices", async (event, data) => {
+  const devices = await socket.emitWithAck("fetchDevices", "all");
+  return devices;
 });
 
 ipcMain.on("disonnect", async (event, data) => {
