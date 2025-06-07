@@ -1,21 +1,211 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Login</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Page</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 1.5rem;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #555;
+      }
+      input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+      input:focus {
+        outline: none;
+        border-color: #4a90e2;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+      }
+      button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #4a90e2;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      button:hover {
+        background-color: #3a7bc8;
+      }
+      .error-container {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 0.75rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .error-container ul {
+        margin: 0;
+        padding-left: 1.5rem;
+      }
+      .register-link {
+        text-align: center;
+        margin-top: 1rem;
+      }
+      .register-link a {
+        color: #4a90e2;
+        text-decoration: none;
+      }
+      .register-link a:hover {
+        text-decoration: underline;
+      }
+      .forgot-password {
+        text-align: right;
+        margin-top: 0.5rem;
+      }
+      .forgot-password a {
+        color: #777;
+        font-size: 0.9rem;
+        text-decoration: none;
+      }
+      .forgot-password a:hover {
+        text-decoration: underline;
+        color: #4a90e2;
+      }
+    </style>
   </head>
   <body>
-    <h2>Login</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Email" required /><br />
-      <input
-        type="password"
-        id="password"
-        placeholder="Password"
-        required
-      /><br />
-      <button type="submit">Login</button>
-    </form>
-    <p id="status"></p>
-    <script src="renderer.js"></script>
+    <div class="container">
+      <h1>Login to Your Account</h1>
+
+      <div id="error-container" class="error-container">
+        <ul id="error-list">
+          <!-- Error messages will be inserted here by JavaScript -->
+        </ul>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        <div class="forgot-password">
+          <a href="/forgot-password">Forgot password?</a>
+        </div>
+
+        <button type="submit">Login</button>
+      </form>
+
+      <div class="register-link">
+        Don't have an account? <a href="/register">Register</a>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const loginForm = document.getElementById("login-form");
+        const errorContainer = document.getElementById("error-container");
+        const errorList = document.getElementById("error-list");
+
+        loginForm.addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          // Clear previous errors
+          errorList.innerHTML = "";
+          errorContainer.style.display = "none";
+
+          // Validate form (example validation)
+          const errors = [];
+
+          if (!email) {
+            errors.push("Email is required");
+          } else if (!isValidEmail(email)) {
+            errors.push("Please enter a valid email address");
+          }
+
+          if (!password) {
+            errors.push("Password is required");
+          } else if (password.length < 6) {
+            errors.push("Password must be at least 6 characters");
+          }
+
+          // Display errors if any
+          if (errors.length > 0) {
+            errors.forEach((error) => {
+              const li = document.createElement("li");
+              li.textContent = error;
+              errorList.appendChild(li);
+            });
+            errorContainer.style.display = "block";
+            return;
+          }
+
+          const result = await window.electronAPI.login({ email, password });
+
+          const status = document.getElementById("status");
+          if (result.success) {
+            status.innerText = "Login successful. Loading dashboard...";
+            // No need to load file manually here – main.js will handle it
+          } else {
+            status.innerText = "Login failed: " + result.error;
+          }
+        });
+
+        // Email validation helper function
+        function isValidEmail(email) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(email);
+        }
+      });
+    </script>
   </body>
 </html>

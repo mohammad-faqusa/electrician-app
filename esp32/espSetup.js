@@ -15,6 +15,9 @@ const peripherals_info = JSON.parse(
 
 async function prepareESP32(socket) {
   try {
+    console.log("this is socket : ");
+    console.log(socket);
+
     socket.send("processSetup", {
       status: "processing",
       data: "🔄 Resetting ESP32...",
@@ -142,11 +145,19 @@ async function copyCleanupScriptToMain(socket) {
 
 async function espSetup(id, plist, socket) {
   try {
+    console.log("start espSetup");
+    console.log("this is socket");
+    console.log(socket);
     await prepareESP32(socket);
+    console.log("prepareESP32");
     await copyCleanupScriptToMain(socket);
+    console.log("copyCleanupScriptToMain");
     await prepareESP32(socket);
+    console.log("prepareESP32");
     await installLibraries(plist, socket);
+    console.log("installLibraries");
     await copyFilesToESP32(["main.py", "boot.py"], socket);
+    console.log("copyFilesToESP32");
     socket.send("processSetup", {
       status: "finished",
       data: `the esp32 setup is finished successfully!`,

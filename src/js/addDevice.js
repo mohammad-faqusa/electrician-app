@@ -95,6 +95,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     const formData = {
       name: document.getElementById("name").value,
       location: document.getElementById("location").value,
+      ssid: document.getElementById("ssid").value,
+      password: document.getElementById("password").value,
       peripherals: selectedPeripherals,
     };
 
@@ -197,7 +199,13 @@ document.addEventListener("DOMContentLoaded", async function () {
       `The device is added to the database, setup the device...`,
       "success"
     );
-    electronAPI.emit("setupDevice", deviceId);
+
+    const network_config = { ssid: formData.ssid, pass: formData.password };
+
+    electronAPI.emit("setupDevice", {
+      deviceId,
+      network_config,
+    });
 
     electronAPI.on("processSetup", (res) => {
       addMessage(res.data, "success");
