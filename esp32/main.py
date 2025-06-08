@@ -1,23 +1,18 @@
-from accelerometer import MPU6050
-from relay import Relay
-from dht_sensor import DHTSensor
+from dht_sensor_simulated import DHTSensor
+from led import InternalLED
 
 # Initialise pins dictionary
 peripherals_pins = {
-    "acc": {},
-    "r1": {},
-    "r2": {},
-    "dht": {},
+    "dht sensor": {},
+    "internal led": {},
 }
 
 # Initialise peripherals dictionary
 peripherals = {}
 
 # Instantiate each peripheral
-peripherals["acc"] = MPU6050()
-peripherals["r1"] = Relay(pin=25)
-peripherals["r2"] = Relay(pin=26)
-peripherals["dht"] = DHTSensor(pin=17)
+peripherals["dht sensor"] = DHTSensor(pin=None)
+peripherals["internal led"] = InternalLED()
 
 
 import json
@@ -51,7 +46,7 @@ async def async_callback(topic, msg, retained):
         result['pins'] = peripherals_pins
         result['status'] = True
         result['commandId'] = msg['commandId']
-        await client.publish('esp32/9/sender', '{}'.format(json.dumps(result)), qos = 1)
+        await client.publish('esp32/2/sender', '{}'.format(json.dumps(result)), qos = 1)
         print("this is pins")
         return  # ✅ Terminate early
      
@@ -65,10 +60,10 @@ async def async_callback(topic, msg, retained):
     result['status'] = True
     result['commandId'] = msg['commandId']
 
-    await client.publish('esp32/9/sender', '{}'.format(json.dumps(result)), qos = 1)
+    await client.publish('esp32/2/sender', '{}'.format(json.dumps(result)), qos = 1)
 
 async def conn_han(client):
-    await client.subscribe('esp32/9/receiver', 1)
+    await client.subscribe('esp32/2/receiver', 1)
     
 async def main(client):
     await client.connect()
@@ -78,7 +73,7 @@ async def main(client):
 
     n = 0
     esp_status = {}
-    esp_status['id'] = 9
+    esp_status['id'] = 2
 
     while True:
         await asyncio.sleep(1)

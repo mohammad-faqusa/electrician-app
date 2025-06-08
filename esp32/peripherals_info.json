@@ -137,6 +137,161 @@
     }
   },
   {
+    "name": "accelerometer_simulated",
+    "title": "Accelerometer Simulated",
+    "library_name": "accelerometer_simulated",
+    "class_name": "MPU6050",
+    "attributes": {
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (random values returned)",
+          "false": "Reads actual sensor data via I2C"
+        },
+        "purpose": "Determines whether the sensor operates in simulation or real hardware mode"
+      },
+      "addr": {
+        "dataType": "Number",
+        "format": "hex",
+        "default": 104,
+        "purpose": "I2C address of the MPU6050 sensor"
+      },
+      "_accel": {
+        "dataType": "Array",
+        "elementType": "Number",
+        "length": 3,
+        "unit": "g",
+        "access": "read-only",
+        "purpose": "Holds acceleration values on X, Y, Z axes"
+      },
+      "_gyro": {
+        "dataType": "Array",
+        "elementType": "Number",
+        "length": 3,
+        "unit": "deg/s",
+        "access": "read-only",
+        "purpose": "Holds gyroscope angular velocity values on X, Y, Z axes"
+      }
+    },
+    "methods": {
+      "read_accel": {
+        "type": "read",
+        "label": "Read Acceleration",
+        "returns": {
+          "dataType": "Array",
+          "elementType": "Number",
+          "length": 3,
+          "unit": "g",
+          "elementNames": ["x", "y", "z"],
+          "range": {
+            "min": -2,
+            "max": 2
+          }
+        },
+        "purpose": "Returns a tuple of X, Y, Z acceleration values"
+      },
+      "read_gyro": {
+        "type": "read",
+        "label": "Read Gyroscope",
+        "returns": {
+          "dataType": "Array",
+          "elementType": "Number",
+          "length": 3,
+          "unit": "deg/s",
+          "elementNames": ["x", "y", "z"],
+          "range": {
+            "min": -250,
+            "max": 250
+          }
+        },
+        "purpose": "Returns a tuple of X, Y, Z gyroscope values"
+      },
+      "read_all": {
+        "type": "read",
+        "label": "Read All Sensors",
+        "returns": {
+          "dataType": "Object",
+          "properties": {
+            "accel": {
+              "dataType": "Array",
+              "elementType": "Number",
+              "length": 3,
+              "unit": "g",
+              "elementNames": ["x", "y", "z"],
+              "range": {
+                "min": -2,
+                "max": 2
+              }
+            },
+            "gyro": {
+              "dataType": "Array",
+              "elementType": "Number",
+              "length": 3,
+              "unit": "deg/s",
+              "elementNames": ["x", "y", "z"],
+              "range": {
+                "min": -250,
+                "max": 250
+              }
+            }
+          }
+        },
+        "purpose": "Returns both accelerometer and gyroscope readings in one call"
+      }
+    },
+    "constructor": {
+      "parameters": [
+        {
+          "name": "i2c",
+          "dataType": "Object",
+          "default": null,
+          "optional": true,
+          "purpose": "I2C bus instance used to communicate with the sensor"
+        },
+        {
+          "name": "addr",
+          "dataType": "Number",
+          "default": 104,
+          "prefix": "hex",
+          "range": {
+            "min": 0,
+            "max": 127
+          },
+          "purpose": "I2C address of the MPU6050 sensor (default is 0x68)"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Simulated data (random values)",
+            "false": "Real hardware readings"
+          },
+          "purpose": "Enables simulation mode if set to true"
+        }
+      ]
+    },
+    "pin_properties": {
+      "vcc": {
+        "purpose": "Power supply pin for the MPU6050 sensor (typically 3.3V or 5V)",
+        "required": true
+      },
+      "gnd": {
+        "purpose": "Ground connection for the sensor",
+        "required": true
+      },
+      "scl": {
+        "purpose": "I2C clock line used to communicate with the sensor",
+        "required": true
+      },
+      "sda": {
+        "purpose": "I2C data line used to communicate with the sensor",
+        "required": true
+      }
+    }
+  },
+  {
     "name": "dht_sensor",
     "title": "DHT Sensor",
     "library_name": "dht_sensor",
@@ -250,6 +405,137 @@
         "dataType": "Object",
         "class": "DHTSensor",
         "purpose": "An instance of the DHTSensor class ready for measuring temperature and humidity"
+      }
+    }
+  },
+  {
+    "name": "dht_sensor_simulated",
+    "title": "DHT Sensor Simulated",
+    "library_name": "dht_sensor_simulated",
+    "class_name": "DHTSensor",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin number connected to the DHT sensor"
+      },
+      "sensor_type": {
+        "dataType": "String",
+        "default": "DHT22",
+        "allowedValues": ["DHT11", "DHT22"],
+        "purpose": "Specifies the type of DHT sensor being used"
+      },
+      "simulate": {
+        "dataType": "Boolean",
+        "default": true,
+        "values_meaning": {
+          "true": "Simulation mode enabled (random temperature and humidity values)",
+          "false": "Reads actual data from the connected sensor"
+        },
+        "purpose": "Controls whether the sensor operates in simulation or real mode"
+      },
+      "_temp": {
+        "dataType": "Number",
+        "unit": "°C",
+        "access": "read-only",
+        "range": {
+          "min": -40,
+          "max": 125
+        },
+        "default": 0,
+        "purpose": "Latest measured temperature value. Valid range: -40°C to 125°C"
+      },
+      "_humidity": {
+        "dataType": "Number",
+        "unit": "%",
+        "access": "read-only",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "default": 0,
+        "purpose": "Latest measured humidity value. Valid range: 0% to 100%"
+      }
+    },
+    "methods": {
+      "measure": {
+        "type": "write",
+        "label": "Trigger Measurement",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Triggers the sensor to update temperature and humidity readings"
+      },
+      "temperature": {
+        "type": "read",
+        "label": "Read Temperature",
+        "returns": {
+          "dataType": "Number",
+          "unit": "°C",
+          "range": {
+            "min": -40,
+            "max": 125
+          }
+        },
+        "purpose": "Returns the last measured temperature value. Range: -40°C to 125°C"
+      },
+      "humidity": {
+        "type": "read",
+        "label": "Read Humidity",
+        "returns": {
+          "dataType": "Number",
+          "unit": "%",
+          "range": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        "purpose": "Returns the last measured humidity value. Range: 0% to 100%"
+      }
+    },
+    "constructor": {
+      "purpose": "Initializes the DHT sensor (DHT11 or DHT22) with the specified GPIO pin, sensor type, and simulation mode.",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number connected to the DHT sensor"
+        },
+        {
+          "name": "sensor_type",
+          "dataType": "String",
+          "default": "DHT22",
+          "allowedValues": ["DHT11", "DHT22"],
+          "purpose": "Specifies the type of DHT sensor being used"
+        },
+        {
+          "name": "simulate",
+          "dataType": "Boolean",
+          "default": true,
+          "values_meaning": {
+            "true": "Sensor data will be simulated using random values",
+            "false": "Sensor will read actual values via GPIO"
+          },
+          "purpose": "Controls whether the sensor operates in simulation or real mode"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "DHTSensor",
+        "purpose": "An instance of the DHTSensor class ready for measuring temperature and humidity"
+      }
+    },
+    "pin_properties": {
+      "pin": {
+        "purpose": "GPIO pin number connected to the DHT sensor",
+        "required": true
+      },
+      "vcc": {
+        "purpose": "Power supply pin for the DHT sensor",
+        "required": true
+      },
+      "gnd": {
+        "purpose": "Ground pin for the DHT sensor",
+        "required": true
       }
     }
   },
