@@ -40,7 +40,8 @@ async function prepareESP32(socket) {
   }
 }
 
-async function installLibraries(plist, socket) {
+async function installLibraries(pDict, socket) {
+  const plist = [...new Set(Object.values(pDict))];
   console.log("here is the selected libraries : ", plist);
   console.log(peripherals_info[0]);
   const libraries = peripherals_info

@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     console.log("Received disconnect event:", data);
   });
 
-  let selectedPeripherals = [];
+  let selectedPeripherals = {};
   let lastFormData = null;
   let isDisconnected = false;
 
@@ -24,7 +24,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   const backToForm = document.getElementById("backToForm");
   const cancelButton = document.getElementById("cancelButton");
 
-  pSelectContainer.innerHTML = `<select id="peripheral" name="peripheral">
+  const addButton = document.getElementById("addPeripheral");
+  const peripheralSelect = document.getElementById("peripheral");
+  peripheralSelect.innerHTML = `
         ${pList
           .map((p) => {
             pName = p.includes("_")
@@ -36,27 +38,28 @@ document.addEventListener("DOMContentLoaded", async function () {
             return `<option value="${p}">${pName}</option>`;
           })
           .join("\n")}
-    </select>
-    <button type="button" id="addPeripheral" class="btn-add">Add</button>
     `;
 
-  const addButton = document.getElementById("addPeripheral");
-  const peripheralSelect = document.getElementById("peripheral");
+  const peripheralName = document.getElementById("peripheral-name");
 
   // Add peripheral to the list
   addButton.addEventListener("click", function () {
     console.log("clicked!");
-    const peripheral = peripheralSelect.value;
+    const peripheral = peripheralName.value;
 
-    if (peripheral && !selectedPeripherals.includes(peripheral)) {
+    if (
+      peripheral &&
+      !selectedPeripherals[peripheral] &&
+      peripheralSelect.value
+    ) {
       // Add to array
-      selectedPeripherals.push(peripheral);
+      selectedPeripherals[peripheral] = peripheralSelect.value;
 
       // Create list item
       const li = document.createElement("li");
       li.className = "peripheral-item";
       li.innerHTML = `
-                <span>${peripheral}</span>
+                <span>${peripheral} ${peripheralSelect.value}</span>
                 <button type="button" class="btn-delete" data-peripheral="${peripheral}">×</button>
             `;
 
@@ -68,6 +71,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
       // Reset select
       peripheralSelect.value = "";
+      peripheralName.value = "";
     }
   });
 
@@ -77,8 +81,8 @@ document.addEventListener("DOMContentLoaded", async function () {
       const button = e.target;
       const peripheral = button.getAttribute("data-peripheral");
 
-      // Remove from array
-      selectedPeripherals = selectedPeripherals.filter((p) => p !== peripheral);
+      // Remove from dict
+      delete selectedPeripherals[peripheral];
 
       // Remove list item
       button.parentElement.remove();
@@ -195,6 +199,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       addMessage("dublicated key name device", "error", errorDetails);
       return;
     }
+
     addMessage(
       `The device is added to the database, setup the device...`,
       "success"

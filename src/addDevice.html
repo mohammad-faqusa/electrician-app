@@ -23,17 +23,27 @@
           </div>
 
           <div class="form-group">
-            <label for="peripheral">Peripherals</label>
             <div class="peripheral-select-container">
-              <select id="peripheral" name="peripheral">
-                <option value="">Select a peripheral</option>
-                <option value="Keyboard">Keyboard</option>
-                <option value="Mouse">Mouse</option>
-                <option value="Monitor">Monitor</option>
-                <option value="Headset">Headset</option>
-                <option value="Webcam">Webcam</option>
-                <option value="Docking Station">Docking Station</option>
-              </select>
+              <div class="form-group">
+                <label for="peripheral">Peripherals</label>
+                <select id="peripheral" name="peripheral">
+                  <option value="">Select a peripheral</option>
+                  <option value="Keyboard">Keyboard</option>
+                  <option value="Mouse">Mouse</option>
+                  <option value="Monitor">Monitor</option>
+                  <option value="Headset">Headset</option>
+                  <option value="Webcam">Webcam</option>
+                  <option value="Docking Station">Docking Station</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="peripheral-name">Peripheral name</label>
+                <input
+                  type="text"
+                  id="peripheral-name"
+                  name="peripheral-name"
+                />
+              </div>
               <button type="button" id="addPeripheral" class="btn-add">
                 Add
               </button>
