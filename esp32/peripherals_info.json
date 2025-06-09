@@ -4,136 +4,227 @@
     "title": "Accelerometer",
     "library_name": "accelerometer",
     "class_name": "MPU6050",
+
     "attributes": {
-      "simulate": {
-        "dataType": "Boolean",
-        "default": true,
-        "values_meaning": {
-          "true": "Simulation mode enabled (random values returned)",
-          "false": "Reads actual sensor data via I2C"
-        },
-        "purpose": "Determines whether the sensor operates in simulation or real hardware mode"
-      },
       "addr": {
         "dataType": "Number",
         "format": "hex",
         "default": 104,
-        "purpose": "I2C address of the MPU6050 sensor"
+        "purpose": "7-bit I²C address of the sensor (0x68 default)"
       },
-      "_accel": {
-        "dataType": "Array",
-        "elementType": "Number",
-        "length": 3,
+      "_accel_range": {
+        "dataType": "Number",
         "unit": "g",
         "access": "read-only",
-        "purpose": "Holds acceleration values on X, Y, Z axes"
+        "allowed": [2, 4, 8, 16],
+        "purpose": "Current ±g full-scale range selected for the accelerometer"
       },
-      "_gyro": {
-        "dataType": "Array",
-        "elementType": "Number",
-        "length": 3,
-        "unit": "deg/s",
+      "_gyro_range": {
+        "dataType": "Number",
+        "unit": "°/s",
         "access": "read-only",
-        "purpose": "Holds gyroscope angular velocity values on X, Y, Z axes"
+        "allowed": [250, 500, 1000, 2000],
+        "purpose": "Current ±deg/s full-scale range selected for the gyroscope"
+      },
+      "_failCount": {
+        "dataType": "Number",
+        "access": "read-only",
+        "purpose": "Running counter of non-fatal I²C read failures"
+      },
+      "_terminatingFailCount": {
+        "dataType": "Number",
+        "access": "read-only",
+        "purpose": "Counter of I²C failures that returned NaN data"
       }
     },
+
     "methods": {
-      "read_accel": {
+      "read_temperature": {
         "type": "read",
-        "label": "Read Acceleration",
-        "returns": {
-          "dataType": "Array",
-          "elementType": "Number",
-          "length": 3,
-          "unit": "g",
-          "elementNames": ["x", "y", "z"],
-          "range": {
-            "min": -2,
-            "max": 2
-          }
-        },
-        "purpose": "Returns a tuple of X, Y, Z acceleration values"
+        "label": "Read Temperature",
+        "returns": { "dataType": "Number", "unit": "°C" },
+        "purpose": "Reads and converts the on-chip thermistor value"
       },
-      "read_gyro": {
-        "type": "read",
-        "label": "Read Gyroscope",
-        "returns": {
-          "dataType": "Array",
-          "elementType": "Number",
-          "length": 3,
-          "unit": "deg/s",
-          "elementNames": ["x", "y", "z"],
-          "range": {
-            "min": -250,
-            "max": 250
+
+      "set_accel_range": {
+        "type": "write",
+        "label": "Set Accelerometer Range",
+        "parameters": [
+          {
+            "name": "accel_range",
+            "dataType": "Number",
+            "allowed": [0, 8, 16, 24],
+            "map": { "0": "±2 g", "8": "±4 g", "16": "±8 g", "24": "±16 g" },
+            "purpose": "Raw register value to select ±2/4/8/16 g"
           }
-        },
-        "purpose": "Returns a tuple of X, Y, Z gyroscope values"
+        ],
+        "returns": { "dataType": "null" },
+        "purpose": "Writes ACCEL_CONFIG to change full-scale range"
       },
-      "read_all": {
+
+      "get_accel_range": {
         "type": "read",
-        "label": "Read All Sensors",
+        "label": "Get Accelerometer Range",
+        "parameters": [
+          {
+            "name": "raw",
+            "dataType": "Boolean",
+            "optional": true,
+            "default": false
+          }
+        ],
+        "returns": { "dataType": "Number", "unit": "g OR raw byte" },
+        "purpose": "Fetches current ±g range (human value or raw register)"
+      },
+
+      "read_accel_data": {
+        "type": "read",
+        "label": "Read Accelerometer (XYZ)",
+        "parameters": [
+          {
+            "name": "g",
+            "dataType": "Boolean",
+            "optional": true,
+            "default": false
+          }
+        ],
         "returns": {
           "dataType": "Object",
           "properties": {
-            "accel": {
-              "dataType": "Array",
-              "elementType": "Number",
-              "length": 3,
-              "unit": "g",
-              "elementNames": ["x", "y", "z"],
-              "range": {
-                "min": -2,
-                "max": 2
-              }
+            "x": { "dataType": "Number" },
+            "y": { "dataType": "Number" },
+            "z": { "dataType": "Number" }
+          },
+          "unit": { "false": "m/s²", "true": "g" }
+        },
+        "purpose": "Reads three-axis acceleration, optionally in g units"
+      },
+
+      "read_accel_abs": {
+        "type": "read",
+        "label": "Read Acceleration Magnitude",
+        "parameters": [
+          {
+            "name": "g",
+            "dataType": "Boolean",
+            "optional": true,
+            "default": false
+          }
+        ],
+        "returns": { "dataType": "Number", "unit": "m/s² OR g" },
+        "purpose": "Scalar |a| calculated from XYZ acceleration"
+      },
+
+      "set_gyro_range": {
+        "type": "write",
+        "label": "Set Gyroscope Range",
+        "parameters": [
+          {
+            "name": "gyro_range",
+            "dataType": "Number",
+            "allowed": [0, 8, 16, 24],
+            "map": {
+              "0": "±250 °/s",
+              "8": "±500 °/s",
+              "16": "±1000 °/s",
+              "24": "±2000 °/s"
             },
-            "gyro": {
-              "dataType": "Array",
-              "elementType": "Number",
-              "length": 3,
-              "unit": "deg/s",
-              "elementNames": ["x", "y", "z"],
-              "range": {
-                "min": -250,
-                "max": 250
-              }
-            }
+            "purpose": "Raw register value to select full-scale range"
+          }
+        ],
+        "returns": { "dataType": "null" },
+        "purpose": "Writes GYRO_CONFIG to change gyroscope scale"
+      },
+
+      "get_gyro_range": {
+        "type": "read",
+        "label": "Get Gyroscope Range",
+        "parameters": [
+          {
+            "name": "raw",
+            "dataType": "Boolean",
+            "optional": true,
+            "default": false
+          }
+        ],
+        "returns": { "dataType": "Number", "unit": "°/s OR raw byte" },
+        "purpose": "Fetches current gyroscope range"
+      },
+
+      "read_gyro_data": {
+        "type": "read",
+        "label": "Read Gyroscope (XYZ)",
+        "returns": {
+          "dataType": "Object",
+          "properties": {
+            "x": { "dataType": "Number", "unit": "°/s" },
+            "y": { "dataType": "Number", "unit": "°/s" },
+            "z": { "dataType": "Number", "unit": "°/s" }
           }
         },
-        "purpose": "Returns both accelerometer and gyroscope readings in one call"
+        "purpose": "Reads angular-velocity about X, Y, Z axes"
+      },
+
+      "read_angle": {
+        "type": "read",
+        "label": "Estimate Tilt Angle",
+        "returns": {
+          "dataType": "Object",
+          "properties": {
+            "x": { "dataType": "Number", "unit": "rad" },
+            "y": { "dataType": "Number", "unit": "rad" }
+          }
+        },
+        "purpose": "Quick roll/pitch estimate from accelerometer (radians)"
       }
     },
+
     "constructor": {
       "parameters": [
         {
-          "name": "i2c",
+          "name": "bus",
           "dataType": "Object",
-          "default": null,
           "optional": true,
-          "purpose": "I2C bus instance used to communicate with the sensor"
+          "purpose": "Pre-configured I²C bus (ignored on ESP32 preset pins)"
+        },
+        {
+          "name": "freq",
+          "dataType": "Number",
+          "optional": true,
+          "unit": "Hz",
+          "purpose": "I²C frequency if a custom bus is supplied"
+        },
+        {
+          "name": "sda",
+          "dataType": "Pin",
+          "optional": true,
+          "purpose": "Alternative SDA pin (default GPIO21 on ESP32)"
+        },
+        {
+          "name": "scl",
+          "dataType": "Pin",
+          "optional": true,
+          "purpose": "Alternative SCL pin (default GPIO22 on ESP32)"
         },
         {
           "name": "addr",
           "dataType": "Number",
+          "format": "hex",
           "default": 104,
-          "prefix": "hex",
-          "range": {
-            "min": 0,
-            "max": 127
-          },
-          "purpose": "I2C address of the MPU6050 sensor (default is 0x68)"
-        },
-        {
-          "name": "simulate",
-          "dataType": "Boolean",
-          "default": true,
-          "values_meaning": {
-            "true": "Simulated data (random values)",
-            "false": "Real hardware readings"
-          },
-          "purpose": "Enables simulation mode if set to true"
+          "purpose": "I²C address (0x68 or 0x69 when AD0 is high)"
         }
       ]
+    },
+
+    "pin_properties": {
+      "vcc": { "purpose": "3 V3 / 5 V supply", "required": true },
+      "gnd": { "purpose": "Ground", "required": true },
+      "scl": { "purpose": "I²C clock line", "required": true },
+      "sda": { "purpose": "I²C data line", "required": true },
+      "int": {
+        "purpose": "Interrupt output (optional for motion/overflow)",
+        "required": false
+      }
     }
   },
   {
@@ -292,123 +383,6 @@
     }
   },
   {
-    "name": "dht_sensor",
-    "title": "DHT Sensor",
-    "library_name": "dht_sensor",
-    "class_name": "DHTSensor",
-    "attributes": {
-      "pin": {
-        "dataType": "Number",
-        "purpose": "GPIO pin number connected to the DHT sensor"
-      },
-      "sensor_type": {
-        "dataType": "String",
-        "default": "DHT22",
-        "allowedValues": ["DHT11", "DHT22"],
-        "purpose": "Specifies the type of DHT sensor being used"
-      },
-      "simulate": {
-        "dataType": "Boolean",
-        "default": true,
-        "values_meaning": {
-          "true": "Simulation mode enabled (random temperature and humidity values)",
-          "false": "Reads actual data from the connected sensor"
-        },
-        "purpose": "Controls whether the sensor operates in simulation or real mode"
-      },
-      "_temp": {
-        "dataType": "Number",
-        "unit": "°C",
-        "access": "read-only",
-        "range": {
-          "min": -40,
-          "max": 125
-        },
-        "default": 0,
-        "purpose": "Latest measured temperature value. Valid range: -40°C to 125°C"
-      },
-      "_humidity": {
-        "dataType": "Number",
-        "unit": "%",
-        "access": "read-only",
-        "range": {
-          "min": 0,
-          "max": 100
-        },
-        "default": 0,
-        "purpose": "Latest measured humidity value. Valid range: 0% to 100%"
-      }
-    },
-    "methods": {
-      "measure": {
-        "type": "write",
-        "label": "Trigger Measurement",
-        "returns": {
-          "dataType": "void"
-        },
-        "purpose": "Triggers the sensor to update temperature and humidity readings"
-      },
-      "temperature": {
-        "type": "read",
-        "label": "Read Temperature",
-        "returns": {
-          "dataType": "Number",
-          "unit": "°C",
-          "range": {
-            "min": -40,
-            "max": 125
-          }
-        },
-        "purpose": "Returns the last measured temperature value. Range: -40°C to 125°C"
-      },
-      "humidity": {
-        "type": "read",
-        "label": "Read Humidity",
-        "returns": {
-          "dataType": "Number",
-          "unit": "%",
-          "range": {
-            "min": 0,
-            "max": 100
-          }
-        },
-        "purpose": "Returns the last measured humidity value. Range: 0% to 100%"
-      }
-    },
-    "constructor": {
-      "purpose": "Initializes the DHT sensor (DHT11 or DHT22) with the specified GPIO pin, sensor type, and simulation mode.",
-      "parameters": [
-        {
-          "name": "pin",
-          "dataType": "Number",
-          "purpose": "GPIO pin number connected to the DHT sensor"
-        },
-        {
-          "name": "sensor_type",
-          "dataType": "String",
-          "default": "DHT22",
-          "allowedValues": ["DHT11", "DHT22"],
-          "purpose": "Specifies the type of DHT sensor being used"
-        },
-        {
-          "name": "simulate",
-          "dataType": "Boolean",
-          "default": true,
-          "values_meaning": {
-            "true": "Sensor data will be simulated using random values",
-            "false": "Sensor will read actual values via GPIO"
-          },
-          "purpose": "Controls whether the sensor operates in simulation or real mode"
-        }
-      ],
-      "returns": {
-        "dataType": "Object",
-        "class": "DHTSensor",
-        "purpose": "An instance of the DHTSensor class ready for measuring temperature and humidity"
-      }
-    }
-  },
-  {
     "name": "dht_sensor_simulated",
     "title": "DHT Sensor Simulated",
     "library_name": "dht_sensor_simulated",
@@ -540,6 +514,84 @@
     }
   },
   {
+    "name": "dht_sensor",
+    "title": "DHT Sensor",
+    "library_name": "dht_sensor",
+    "class_name": "DHTSensor",
+    "attributes": {
+      "pin": {
+        "dataType": "Number",
+        "purpose": "GPIO pin connected to the sensor data line"
+      }
+    },
+    "methods": {
+      "measure": {
+        "type": "write",
+        "label": "Trigger Measurement",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Initiates a new reading cycle and refreshes the internal buffer"
+      },
+      "temperature": {
+        "type": "read",
+        "label": "Read Temperature",
+        "returns": {
+          "dataType": "Number",
+          "unit": "°C",
+          "range": {
+            "min": -40,
+            "max": 80
+          }
+        },
+        "purpose": "Returns the latest temperature reading in degrees Celsius"
+      },
+      "humidity": {
+        "type": "read",
+        "label": "Read Humidity",
+        "returns": {
+          "dataType": "Number",
+          "unit": "%",
+          "range": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        "purpose": "Returns the latest relative-humidity reading as a percentage"
+      }
+    },
+    "constructor": {
+      "purpose": "Creates a DHTSensor instance bound to the specified GPIO pin",
+      "parameters": [
+        {
+          "name": "pin",
+          "dataType": "Number",
+          "purpose": "GPIO pin number (or Pin object) where the sensor’s data line is connected"
+        }
+      ],
+      "returns": {
+        "dataType": "Object",
+        "class": "DHTSensor",
+        "purpose": "A ready-to-use DHTSensor object capable of measuring temperature and humidity"
+      }
+    },
+    "pin_properties": {
+      "pin": {
+        "purpose": "GPIO pin connected to the sensor data line",
+        "required": true
+      },
+      "vcc": {
+        "purpose": "3.3 V or 5 V supply for the sensor",
+        "required": true
+      },
+      "gnd": {
+        "purpose": "Ground connection for the sensor",
+        "required": true
+      }
+    }
+  },
+
+  {
     "name": "encoder",
     "title": "Encoder",
     "library_name": "encoder",
@@ -644,6 +696,30 @@
         "class": "Encoder",
         "purpose": "An instance of the Encoder class used to track rotary position"
       }
+    },
+    "pin_properties": {
+      "gnd": {
+        "purpose": "Ground connection for the encoder module",
+        "required": true
+      },
+      "vcc": {
+        "purpose": "Voltage supply for the encoder module (typically 3.3V or 5V)",
+        "required": true
+      },
+      "s1": {
+        "alias": "pin_a",
+        "purpose": "Encoder signal pin A (rotational signal channel A)",
+        "required": true
+      },
+      "s2": {
+        "alias": "pin_b",
+        "purpose": "Encoder signal pin B (rotational signal channel B)",
+        "required": true
+      },
+      "key": {
+        "purpose": "Push-button switch pin (optional)",
+        "required": false
+      }
     }
   },
   {
@@ -733,6 +809,32 @@
         "class": "GasSensor",
         "purpose": "An instance of the GasSensor class ready for reading gas levels"
       }
+    },
+    "pin_properties": {
+      "gnd": {
+        "purpose": "Ground connection for the gas sensor module",
+        "required": true
+      },
+      "vcc": {
+        "purpose": "Voltage supply for the gas sensor (typically 5V or 3.3V depending on the sensor)",
+        "required": true
+      },
+      "aout": {
+        "alias": "pin",
+        "purpose": "Analog output pin that provides gas concentration level (used if analog=true)",
+        "required": true,
+        "conditional_on": {
+          "analog": true
+        }
+      },
+      "dout": {
+        "alias": "pin",
+        "purpose": "Digital output pin that goes HIGH/LOW based on gas threshold (used if analog=false)",
+        "required": true,
+        "conditional_on": {
+          "analog": false
+        }
+      }
     }
   },
   {
@@ -783,6 +885,22 @@
         },
         "purpose": "Turns the LED ON (sets the state to ON)"
       },
+      "switch": {
+        "type": "write",
+        "label": "Switch",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Switch the led ON or OFF, according to parameter value",
+        "parameters": [
+          {
+            "name": "status",
+            "dataType": "Boolean",
+            "default": false,
+            "purpose": "the status boolean value, true : led on, false : led off"
+          }
+        ]
+      },
       "off": {
         "type": "write",
         "label": "Turn OFF",
@@ -803,7 +921,11 @@
         "type": "read",
         "label": "Check if ON",
         "returns": {
-          "dataType": "Boolean"
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "LED On",
+            "false": "LED Off"
+          }
         },
         "purpose": "Returns the current state of the LED (True if ON, False if OFF)"
       }
@@ -842,6 +964,17 @@
         "class": "LED",
         "purpose": "An instance of the LED class ready for digital output control"
       }
+    },
+    "pin_properties": {
+      "gnd": {
+        "purpose": "Connects to ground to complete the circuit for the LED",
+        "required": true
+      },
+      "vcc": {
+        "alias": "pin",
+        "purpose": "GPIO pin controlling the LED (acts as power source in active-high configuration)",
+        "required": true
+      }
     }
   },
   {
@@ -870,6 +1003,22 @@
         },
         "purpose": "Turns the LED ON (sets the state to ON)"
       },
+      "switch": {
+        "type": "write",
+        "label": "Switch",
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Switch the led ON or OFF, according to parameter value",
+        "parameters": [
+          {
+            "name": "status",
+            "dataType": "Boolean",
+            "default": false,
+            "purpose": "the status boolean value, true : led on, false : led off"
+          }
+        ]
+      },
       "off": {
         "type": "write",
         "label": "Turn OFF",
@@ -890,7 +1039,11 @@
         "type": "read",
         "label": "Check if ON",
         "returns": {
-          "dataType": "Boolean"
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "LED On",
+            "false": "LED Off"
+          }
         },
         "purpose": "Returns the current state of the LED (True if ON, False if OFF)"
       }
@@ -929,6 +1082,13 @@
         "class": "InternalLED",
         "purpose": "An instance of InternalLED, ready to be turned on or off"
       }
+    },
+    "pin_properties": {
+      "internal": {
+        "purpose": "Uses the onboard LED (typically GPIO2) already wired inside the ESP32 board",
+        "note": "No physical wiring required; LED is connected internally",
+        "required": false
+      }
     }
   },
   {
@@ -953,7 +1113,7 @@
     },
     "methods": {
       "set_callback": {
-        "type": "write",
+        "type": "read",
         "label": "Register Motion Callback",
         "parameters": [
           {
@@ -1015,7 +1175,7 @@
     },
     "methods": {
       "set_callback": {
-        "type": "write",
+        "type": "read",
         "label": "Register Button Callback",
         "parameters": [
           {
@@ -1133,7 +1293,11 @@
         "type": "read",
         "label": "Check Relay State",
         "returns": {
-          "dataType": "Boolean"
+          "dataType": "Boolean",
+          "values_meaning": {
+            "true": "Relay On",
+            "false": "Relay Off"
+          }
         },
         "purpose": "Returns the current state of the relay (True if ON, False if OFF)"
       }
@@ -1173,6 +1337,21 @@
         "class": "Relay",
         "purpose": "An instance of the Relay class ready to control relay operations"
       }
+    },
+    "pin_properties": {
+      "gnd": {
+        "purpose": "Ground connection for the relay module",
+        "required": true
+      },
+      "vcc": {
+        "purpose": "Voltage supply for the relay (typically 5V or 3.3V depending on the module)",
+        "required": true
+      },
+      "relay_pin": {
+        "alias": "pin",
+        "purpose": "GPIO pin connected to the relay control input",
+        "required": true
+      }
     }
   },
   {
@@ -1188,82 +1367,106 @@
       "freq": {
         "dataType": "Number",
         "default": 50,
-        "range": {
-          "min": 1,
-          "max": 1000
-        },
         "unit": "Hz",
-        "purpose": "Frequency for controlling the servo motor (default is 50Hz)"
+        "purpose": "PWM frequency for the servo signal"
       },
       "min_us": {
         "dataType": "Number",
-        "default": 500,
-        "range": {
-          "min": 0,
-          "max": 2000
-        },
+        "default": 544,
         "unit": "μs",
-        "purpose": "Minimum pulse width in microseconds"
+        "purpose": "Minimum pulse width in microseconds (corresponds to min_deg)"
       },
       "max_us": {
         "dataType": "Number",
-        "default": 2500,
-        "range": {
-          "min": 2000,
-          "max": 5000
-        },
+        "default": 2400,
         "unit": "μs",
-        "purpose": "Maximum pulse width in microseconds"
+        "purpose": "Maximum pulse width in microseconds (corresponds to max_deg)"
       },
-      "angle_range": {
+      "min_deg": {
+        "dataType": "Number",
+        "default": 0,
+        "unit": "°",
+        "purpose": "Minimum angle in degrees"
+      },
+      "max_deg": {
         "dataType": "Number",
         "default": 180,
-        "range": {
-          "min": 0,
-          "max": 360
-        },
         "unit": "°",
-        "purpose": "Range of motion of the servo motor in degrees"
+        "purpose": "Maximum angle in degrees"
       },
       "_angle": {
         "dataType": "Number",
-        "default": 0,
-        "range": {
-          "min": 0,
-          "max": 180
-        },
         "unit": "°",
         "access": "read-only",
-        "purpose": "Current angle of the servo motor, ranging from 0° to 180°"
+        "purpose": "Current angle of the servo motor (in degrees)"
       },
       "_pulse_us": {
         "dataType": "Number",
-        "default": 500,
         "unit": "μs",
         "access": "read-only",
-        "purpose": "Current pulse width in microseconds corresponding to the angle"
+        "purpose": "Current pulse width in microseconds"
       }
     },
     "methods": {
-      "write_angle": {
+      "write": {
         "type": "write",
-        "label": "Write Angle",
+        "label": "Write Angle (Degrees)",
         "parameters": [
           {
-            "name": "angle",
+            "name": "deg",
             "dataType": "Number",
+            "unit": "°",
             "range": {
               "min": 0,
               "max": 180
             },
-            "unit": "°",
-            "purpose": "Sets the servo motor to a specific angle, from 0° to 180°. The value must be between 0 and 180."
+            "purpose": "Angle in degrees to move the servo to"
           }
         ],
         "returns": {
           "dataType": "void"
         },
-        "purpose": "Sets the servo motor's angle by calculating the corresponding pulse width"
+        "purpose": "Sets the servo motor to the given angle in degrees"
+      },
+      "write_rad": {
+        "type": "write",
+        "label": "Write Angle (Radians)",
+        "parameters": [
+          {
+            "name": "rad",
+            "dataType": "Number",
+            "unit": "rad",
+            "purpose": "Angle in radians to move the servo to"
+          }
+        ],
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Sets the servo angle using radians"
+      },
+      "read": {
+        "type": "read",
+        "label": "Read Angle (Degrees)",
+        "returns": {
+          "dataType": "Number",
+          "unit": "°",
+          "range": {
+            "min": 0,
+            "max": 180
+          },
+          "purpose": "Returns the current angle of the servo"
+        },
+        "purpose": "Returns the current servo angle in degrees"
+      },
+      "read_rad": {
+        "type": "read",
+        "label": "Read Angle (Radians)",
+        "returns": {
+          "dataType": "Number",
+          "unit": "rad",
+          "purpose": "Returns the current servo angle in radians"
+        },
+        "purpose": "Returns the current servo angle in radians"
       },
       "write_us": {
         "type": "write",
@@ -1272,113 +1475,105 @@
           {
             "name": "us",
             "dataType": "Number",
-            "range": {
-              "min": 500,
-              "max": 2500
-            },
             "unit": "μs",
-            "purpose": "Sets the servo motor's pulse width directly in microseconds. The value must be between 500 and 2500 μs."
+            "range": {
+              "min": 544,
+              "max": 2400
+            },
+            "purpose": "Directly sets the pulse width in microseconds"
           }
         ],
         "returns": {
           "dataType": "void"
         },
-        "purpose": "Sets the servo motor's pulse width directly in microseconds and updates the angle"
-      },
-      "read_angle": {
-        "type": "read",
-        "label": "Read Angle",
-        "returns": {
-          "dataType": "Number",
-          "range": {
-            "min": 0,
-            "max": 180
-          },
-          "unit": "°",
-          "purpose": "Returns the current angle of the servo motor, between 0° and 180°"
-        },
-        "purpose": "Returns the current angle of the servo motor"
+        "purpose": "Sets the pulse width directly for advanced control"
       },
       "read_us": {
         "type": "read",
         "label": "Read Pulse Width",
         "returns": {
           "dataType": "Number",
-          "range": {
-            "min": 500,
-            "max": 2500
-          },
           "unit": "μs",
-          "purpose": "Returns the current pulse width of the servo motor, between 500μs and 2500μs"
+          "range": {
+            "min": 544,
+            "max": 2400
+          },
+          "purpose": "Returns the current pulse width in microseconds"
         },
-        "purpose": "Returns the current pulse width of the servo motor"
+        "purpose": "Returns the pulse width currently sent to the servo"
       },
-      "deinit": {
+      "off": {
         "type": "write",
-        "label": "Deinitialize",
+        "label": "Turn Off",
         "returns": {
           "dataType": "void"
         },
-        "purpose": "Deinitializes the servo motor and releases resources"
+        "purpose": "Turns off the PWM signal to the servo"
       }
     },
     "constructor": {
-      "purpose": "Initializes a Servo motor by setting up the PWM configuration for angle control.",
+      "purpose": "Initializes a Servo motor using PWM on a specified pin and angle-to-pulse mapping.",
       "parameters": [
         {
-          "name": "pin",
+          "name": "pin_id",
           "dataType": "Number",
-          "purpose": "GPIO pin number connected to the Servo motor"
+          "purpose": "GPIO pin number connected to the servo signal wire"
+        },
+        {
+          "name": "min_us",
+          "dataType": "Number",
+          "default": 544,
+          "unit": "μs",
+          "purpose": "Minimum pulse width in microseconds for min_deg"
+        },
+        {
+          "name": "max_us",
+          "dataType": "Number",
+          "default": 2400,
+          "unit": "μs",
+          "purpose": "Maximum pulse width in microseconds for max_deg"
+        },
+        {
+          "name": "min_deg",
+          "dataType": "Number",
+          "default": 0,
+          "unit": "°",
+          "purpose": "Minimum angle in degrees (default 0°)"
+        },
+        {
+          "name": "max_deg",
+          "dataType": "Number",
+          "default": 180,
+          "unit": "°",
+          "purpose": "Maximum angle in degrees (default 180°)"
         },
         {
           "name": "freq",
           "dataType": "Number",
           "default": 50,
-          "range": {
-            "min": 1,
-            "max": 1000
-          },
           "unit": "Hz",
-          "purpose": "PWM frequency for the servo control signal (default is 50Hz)"
-        },
-        {
-          "name": "min_us",
-          "dataType": "Number",
-          "default": 500,
-          "range": {
-            "min": 0,
-            "max": 2000
-          },
-          "unit": "μs",
-          "purpose": "Minimum pulse width in microseconds, corresponding to 0° angle"
-        },
-        {
-          "name": "max_us",
-          "dataType": "Number",
-          "default": 2500,
-          "range": {
-            "min": 2000,
-            "max": 5000
-          },
-          "unit": "μs",
-          "purpose": "Maximum pulse width in microseconds, corresponding to max angle"
-        },
-        {
-          "name": "angle_range",
-          "dataType": "Number",
-          "default": 180,
-          "range": {
-            "min": 0,
-            "max": 360
-          },
-          "unit": "°",
-          "purpose": "Range of servo motion in degrees"
+          "purpose": "PWM frequency for controlling the servo (default 50Hz)"
         }
       ],
       "returns": {
         "dataType": "Object",
         "class": "Servo",
-        "purpose": "An instance of the Servo class ready to control the motor angle"
+        "purpose": "An instance of the Servo class ready for angle or pulse control"
+      }
+    },
+    "pin_properties": {
+      "gnd": {
+        "purpose": "Ground connection for the servo motor",
+        "required": true
+      },
+      "vcc": {
+        "purpose": "Voltage supply for the servo motor (typically 5V or 3.3V depending on the model)",
+        "required": true
+      },
+      "signal": {
+        "alias": "pin",
+        "purpose": "GPIO pin number connected to the servo signal wire",
+        "required": true
       }
     }
   },
@@ -1480,6 +1675,21 @@
         "dataType": "Object",
         "class": "SlideSwitch",
         "purpose": "An instance of the SlideSwitch class ready for use"
+      }
+    },
+    "pin_properties": {
+      "gnd": {
+        "purpose": "Ground connection for the slide switch",
+        "required": true
+      },
+      "vcc": {
+        "purpose": "Voltage supply for the slide switch (typically 3.3V or 5V depending on the model)",
+        "required": true
+      },
+      "signal": {
+        "alias": "pin",
+        "purpose": "GPIO pin number connected to the slide switch",
+        "required": true
       }
     }
   }
