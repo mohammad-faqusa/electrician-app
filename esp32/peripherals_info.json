@@ -933,95 +933,66 @@
   },
   {
     "name": "motion_sensor",
-    "title": "Motion Sensor",
+    "title": "PIR Motion Sensor",
     "library_name": "motion_sensor",
-    "class_name": "MotionSensor",
+    "class_name": "PIRSensor",
     "attributes": {
       "pin": {
         "dataType": "Number",
-        "purpose": "GPIO pin number connected to the Motion sensor (PIR)"
+        "purpose": "GPIO pin number connected to the PIR sensor output"
       },
-      "simulate": {
-        "dataType": "Boolean",
-        "default": true,
-        "values_meaning": {
-          "true": "Simulation mode enabled (random motion detection)",
-          "false": "Reads actual motion data from the connected sensor"
-        },
-        "purpose": "Controls whether the sensor operates in simulation or real mode"
-      },
-      "_motion_detected": {
+      "_motion_state": {
         "dataType": "Boolean",
         "access": "read-only",
         "values_meaning": {
-          "true": "Motion detected",
-          "false": "No motion detected"
+          "true": "Motion detected (pin HIGH)",
+          "false": "No motion (pin LOW)"
         },
-        "purpose": "Indicates whether motion has been detected or not"
+        "purpose": "Latest sampled state of the PIR output"
       }
     },
     "methods": {
-      "read": {
-        "type": "read",
-        "label": "Read Motion State",
-        "returns": {
-          "dataType": "Boolean",
-          "values_meaning": {
-            "true": "Motion detected",
-            "false": "No motion detected"
-          }
-        },
-        "purpose": "Reads the current state of the motion sensor"
-      },
-      "wait_for_motion": {
+      "set_callback": {
         "type": "write",
-        "label": "Wait for Motion",
-        "returns": {
-          "dataType": "Boolean",
-          "values_meaning": {
-            "true": "Motion detected within timeout",
-            "false": "No motion detected within timeout"
-          }
-        },
+        "label": "Register Motion Callback",
         "parameters": [
           {
-            "name": "timeout",
-            "dataType": "Number",
-            "default": 10,
-            "unit": "seconds",
-            "range": {
-              "min": 0,
-              "max": 300
-            },
-            "purpose": "Timeout duration to wait for motion detection"
+            "name": "callback",
+            "dataType": "Function",
+            "signature": "fn(level: Boolean)",
+            "purpose": "Called with true on rising edge (motion) and false on falling edge (idle)"
           }
         ],
-        "purpose": "Waits for motion detection for a specified timeout period"
+        "returns": { "dataType": "Void" },
+        "purpose": "Attach a user-supplied function to run on every edge transition"
+      },
+      "deinit": {
+        "type": "write",
+        "label": "Disable Sensor",
+        "returns": { "dataType": "Void" },
+        "purpose": "Detach the IRQ handler and release the GPIO"
       }
     },
     "constructor": {
-      "purpose": "Initializes the motion sensor for detecting motion either in simulation mode or using a real GPIO pin.",
+      "purpose": "Create a PIRSensor edge detector and optionally register a callback.",
       "parameters": [
         {
           "name": "pin",
           "dataType": "Number",
-          "purpose": "GPIO pin number connected to the motion sensor"
+          "purpose": "GPIO pin number connected to the PIR output"
         },
         {
-          "name": "simulate",
-          "dataType": "Boolean",
-          "default": true,
-          "values_meaning": {
-            "true": "Sensor data will be simulated (random motion values)",
-            "false": "Reads actual motion detection data from the connected pin"
-          },
-          "purpose": "Whether to operate in simulation mode or real mode"
+          "name": "callback",
+          "dataType": "Function",
+          "optional": true,
+          "signature": "fn(level: Boolean)",
+          "purpose": "Function to call immediately on each edge (true = motion, false = idle)"
         }
       ],
       "returns": {
         "dataType": "Object",
-        "class": "MotionSensor",
-        "purpose": "An instance of the MotionSensor class ready for detecting motion"
+        "class": "PIRSensor",
+        "purpose": "New PIRSensor instance ready for motion detection"
       }
     }
   },
@@ -1033,134 +1004,64 @@
     "attributes": {
       "pin": {
         "dataType": "Number",
-        "purpose": "GPIO pin number connected to the PushButton"
-      },
-      "simulate": {
-        "dataType": "Boolean",
-        "default": true,
-        "values_meaning": {
-          "true": "Simulation mode enabled (manual control of button state)",
-          "false": "Reads actual state from the physical button"
-        },
-        "purpose": "Controls whether the button operates in simulation or real mode"
+        "purpose": "GPIO pin number connected to the push-button"
       },
       "debounce_ms": {
         "dataType": "Number",
-        "default": 50,
-        "range": {
-          "min": 0,
-          "max": 500
-        },
-        "purpose": "Debounce time in milliseconds to prevent false triggering from button presses"
-      },
-      "_last_state": {
-        "dataType": "Boolean",
-        "access": "read-only",
-        "purpose": "Stores the last known state of the button (True = pressed, False = released)"
-      },
-      "_last_time": {
-        "dataType": "Number",
-        "access": "read-only",
-        "purpose": "Stores the last time the button state was changed (in ms)"
-      },
-      "_simulated_state": {
-        "dataType": "Boolean",
-        "access": "read-write",
-        "purpose": "Used only in simulation mode to manually control the button state"
-      },
-      "was_pressed": {
-        "dataType": "Boolean",
-        "access": "read-only",
-        "purpose": "Indicates whether the button was pressed (can be used to detect button press events)"
+        "unit": "milliseconds",
+        "default": 20,
+        "purpose": "Debounce interval that filters out mechanical bounce"
       }
     },
     "methods": {
-      "set_simulated_state": {
+      "set_callback": {
         "type": "write",
-        "label": "Set Simulated State",
+        "label": "Register Button Callback",
         "parameters": [
           {
-            "name": "pressed",
-            "dataType": "Boolean",
-            "values_meaning": {
-              "true": "Simulates button pressed",
-              "false": "Simulates button released"
-            },
-            "purpose": "Sets the simulated state of the button (only used in simulation mode)"
+            "name": "callback",
+            "dataType": "Function",
+            "signature": "fn(pressed: Boolean)",
+            "purpose": "Invoked after debounce; true when pressed, false when released"
           }
         ],
-        "returns": {
-          "dataType": "void"
-        },
-        "purpose": "Sets the simulated button state"
+        "returns": { "dataType": "Void" },
+        "purpose": "Attach a user-supplied function to run on debounced state changes"
       },
-      "is_pressed": {
-        "type": "read",
-        "label": "Is Pressed",
-        "returns": {
-          "dataType": "Boolean",
-          "values_meaning": {
-            "true": "Button is pressed",
-            "false": "Button is released"
-          }
-        },
-        "purpose": "Checks if the button is pressed or released, applies debounce logic"
-      },
-      "push": {
+      "deinit": {
         "type": "write",
-        "label": "Push Button",
-        "returns": {
-          "dataType": "void"
-        },
-        "purpose": "Simulates a button press and release cycle (only for simulation mode)"
-      },
-      "get_event": {
-        "type": "read",
-        "label": "Get Event",
-        "returns": {
-          "dataType": "Boolean",
-          "values_meaning": {
-            "true": "Button was pressed",
-            "false": "No button press detected"
-          }
-        },
-        "purpose": "Returns and clears the `was_pressed` flag indicating whether the button was pressed"
+        "label": "Disable Button",
+        "returns": { "dataType": "Void" },
+        "purpose": "Detach the IRQ handler and release the GPIO"
       }
     },
     "constructor": {
-      "purpose": "Initializes a push button instance, optionally in simulation mode, with support for debounce handling.",
+      "purpose": "Create a debounced PushButton detector and optionally register a callback.",
       "parameters": [
         {
           "name": "pin",
           "dataType": "Number",
-          "purpose": "GPIO pin number connected to the push button"
-        },
-        {
-          "name": "simulate",
-          "dataType": "Boolean",
-          "default": true,
-          "values_meaning": {
-            "true": "Button state is simulated",
-            "false": "Button state is read from the physical hardware pin"
-          },
-          "purpose": "Specifies whether the button is in simulation mode"
+          "purpose": "GPIO pin number connected to the button"
         },
         {
           "name": "debounce_ms",
           "dataType": "Number",
-          "default": 50,
-          "unit": "ms",
-          "range": {
-            "min": 0,
-            "max": 1000
-          },
-          "purpose": "Debounce duration to prevent false multiple button presses"
+          "default": 20,
+          "unit": "milliseconds",
+          "purpose": "Debounce interval to ignore spurious transitions"
+        },
+        {
+          "name": "callback",
+          "dataType": "Function",
+          "optional": true,
+          "signature": "fn(pressed: Boolean)",
+          "purpose": "Function to call after each debounced state change (true = pressed, false = released)"
         }
       ],
       "returns": {
         "dataType": "Object",
         "class": "PushButton",
-        "purpose": "An instance of the PushButton class ready for state reading and event handling"
+        "purpose": "New PushButton instance ready for debounced edge detection"
       }
     }
   },
