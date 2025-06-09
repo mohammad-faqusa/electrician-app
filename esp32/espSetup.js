@@ -157,7 +157,7 @@ async function espSetup(id, plist, socket) {
     console.log("prepareESP32");
     await installLibraries(plist, socket);
     console.log("installLibraries");
-    await copyFilesToESP32(["main.py", "boot.py", "comparator.py"], socket);
+    await copyFilesToESP32(["comparator.py", "main.py", "boot.py"], socket);
     console.log("copyFilesToESP32");
     socket.send("processSetup", {
       status: "finished",

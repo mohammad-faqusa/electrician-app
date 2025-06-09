@@ -1,27 +1,24 @@
-from led import LED
 from led import InternalLED
-from servo_motor import Servo
+from push_button import PushButton
 
 # Initialise pins dictionary
 peripherals_pins = {
-    "led": {},
     "internal led": {},
-    "servo motor": {},
+    "push button": {},
 }
 
 # Initialise peripherals dictionary
 peripherals = {}
 
 # Instantiate each peripheral
-peripherals["led"] = LED(pin=2)
 peripherals["internal led"] = InternalLED()
-peripherals["servo motor"] = Servo(pin=13)
+peripherals["push button"] = PushButton(pin=0)
 
 
 import json
 
 from mqtt_as import MQTTClient, config
-import asyncio
+import uasyncio as asyncio
 from comparator import Comparator
 
 cmp = Comparator()
@@ -43,7 +40,11 @@ async def async_callback(topic, msg, retained):
 
     if(msg.get('automation')):
         automation = {}
-        automation = msg.copy();
+        automation = msg.copy()
+        if(msg.get('interrupt')): #if peripheral is motion sensor or push button
+            peripherals[automation["source"]].set_callback(make_mqtt_cb(automation))
+            return
+                
         automations.append(automation)
         return
 
@@ -55,7 +56,6 @@ async def async_callback(topic, msg, retained):
         print("this is pins")
         return  # ✅ Terminate early
      
-    print("don't run here : "); 
     value = peripherals[msg['peripheral']][msg['method']][msg['param']]
     
     result['peripheral'] = msg['peripheral']
@@ -66,6 +66,7 @@ async def async_callback(topic, msg, retained):
     result['commandId'] = msg['commandId']
 
     await client.publish('esp32/2/sender', '{}'.format(json.dumps(result)), qos = 1)
+
 
 async def conn_han(client):
     await client.subscribe('esp32/2/receiver', 1)
@@ -122,12 +123,29 @@ async def runAutomation(automation):
         if(cmp[automation['condition']][peripherals[selectedPeripheral][selectedMethod][inputParams], threshold]):
             await publishMqttAutomation(outputDeviceId, outputMsg)
     elif (automation['returnType'] == 'Boolean'):
-        print('published message to device 1')
         if(cmp['eq'][peripherals[selectedPeripheral][selectedMethod][inputParams], automation['condition']]):
-            print('published message to device 1')
             await publishMqttAutomation(outputDeviceId, outputMsg)
         
     print(outputMsg)
+
+def make_mqtt_cb(automation):
+    outputMsg = {}
+    outputMsg['peripheral'] = automation['source-output']
+    outputMsg['method'] = automation['method-output']
+    outputMsg['param'] = automation['outputParams']
+    outputMsg['commandId'] = 1
+    output_device_id = automation['outputDeviceId']
+    
+    if outputMsg['param'] is None:
+        outputMsg['param'] = []
+    
+    async def _job(level):
+        if(level == automation['condition']):
+            await publishMqttAutomation(output_device_id, outputMsg)
+
+    # synchronous wrapper — **what you actually register**
+    return lambda level: asyncio.create_task(_job(level))
+
 
 config['subs_cb'] = callback
 config['connect_coro'] = conn_han
