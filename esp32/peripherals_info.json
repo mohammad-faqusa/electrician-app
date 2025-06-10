@@ -1268,7 +1268,7 @@
       "on": {
         "type": "write",
         "label": "Turn On Relay",
-        "parameters": [],
+
         "returns": {
           "dataType": "void"
         },
@@ -1277,7 +1277,6 @@
       "off": {
         "type": "write",
         "label": "Turn Off Relay",
-        "parameters": [],
         "returns": {
           "dataType": "void"
         },
@@ -1286,7 +1285,6 @@
       "toggle": {
         "type": "write",
         "label": "Toggle Relay State",
-        "parameters": [],
         "returns": {
           "dataType": "void"
         },
@@ -1310,7 +1308,6 @@
       "is_on": {
         "type": "read",
         "label": "Check Relay State",
-        "parameters": [],
         "returns": {
           "dataType": "Boolean",
           "values_meaning": {

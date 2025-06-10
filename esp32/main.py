@@ -1,27 +1,28 @@
-from led import InternalLED
-from push_button import PushButton
+from relay import Relay
 
 # Initialise pins dictionary
 peripherals_pins = {
-    "internal led": {},
-    "push button": {},
+    "relay 1": {},
+    "relay 2": {},
+    "relay 3": {},
 }
 
 # Initialise peripherals dictionary
 peripherals = {}
 
 # Instantiate each peripheral
-peripherals["internal led"] = InternalLED()
-peripherals["push button"] = PushButton(pin=0)
+peripherals["relay 1"] = Relay(pin=15)
+peripherals["relay 2"] = Relay(pin=2)
+peripherals["relay 3"] = Relay(pin=4)
 
 
 import json
 
 from mqtt_as import MQTTClient, config
 import uasyncio as asyncio
-from comparator import Comparator
+import comparator
 
-cmp = Comparator()
+cmp = comparator.Comparator()
 automations = []
 
 # Local configuration
@@ -52,7 +53,7 @@ async def async_callback(topic, msg, retained):
         result['pins'] = peripherals_pins
         result['status'] = True
         result['commandId'] = msg['commandId']
-        await client.publish('esp32/2/sender', '{}'.format(json.dumps(result)), qos = 1)
+        await client.publish('esp32/3/sender', '{}'.format(json.dumps(result)), qos = 1)
         print("this is pins")
         return  # ✅ Terminate early
      
@@ -65,10 +66,11 @@ async def async_callback(topic, msg, retained):
     result['status'] = True
     result['commandId'] = msg['commandId']
 
-    await client.publish('esp32/2/sender', '{}'.format(json.dumps(result)), qos = 1)
+    await client.publish('esp32/3/sender', '{}'.format(json.dumps(result)), qos = 1)
+
 
 async def conn_han(client):
-    await client.subscribe('esp32/2/receiver', 1)
+    await client.subscribe('esp32/3/receiver', 1)
     
 async def main(client):
     await client.connect()
@@ -78,7 +80,7 @@ async def main(client):
 
     n = 0
     esp_status = {}
-    esp_status['id'] = 2
+    esp_status['id'] = 3
 
     while True:
         await asyncio.sleep(1)
@@ -100,6 +102,7 @@ async def automation_loop():
             except Exception as e:
                 print("Automation error:", e)
                 
+
 async def publishMqttAutomation(outputDeviceId, outputMsg):
     await client.publish('esp32/{}/receiver'.format(outputDeviceId), json.dumps(outputMsg), qos = 1)
 async def runAutomation(automation):
@@ -143,6 +146,7 @@ def make_mqtt_cb(automation):
 
     # synchronous wrapper — **what you actually register**
     return lambda level: asyncio.create_task(_job(level))
+
 
 config['subs_cb'] = callback
 config['connect_coro'] = conn_han
