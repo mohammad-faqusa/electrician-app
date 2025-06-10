@@ -1233,22 +1233,22 @@
     "attributes": {
       "pin": {
         "dataType": "Number",
-        "purpose": "GPIO pin number connected to the Relay module"
+        "purpose": "GPIO pin number connected to the relay module"
       },
       "active_high": {
         "dataType": "Boolean",
         "default": true,
         "values_meaning": {
-          "true": "Relay is active when set to HIGH",
-          "false": "Relay is active when set to LOW"
+          "true": "Relay is active when pin is set to HIGH",
+          "false": "Relay is active when pin is set to LOW"
         },
         "purpose": "Defines whether the relay is activated when the pin is HIGH or LOW"
       },
       "simulate": {
         "dataType": "Boolean",
-        "default": true,
+        "default": false,
         "values_meaning": {
-          "true": "Simulation mode enabled (manual relay state control)",
+          "true": "Simulation mode enabled (console output only)",
           "false": "Controls actual relay hardware connected to the pin"
         },
         "purpose": "Controls whether the relay operates in simulation or real mode"
@@ -1268,6 +1268,7 @@
       "on": {
         "type": "write",
         "label": "Turn On Relay",
+        "parameters": [],
         "returns": {
           "dataType": "void"
         },
@@ -1276,6 +1277,7 @@
       "off": {
         "type": "write",
         "label": "Turn Off Relay",
+        "parameters": [],
         "returns": {
           "dataType": "void"
         },
@@ -1284,19 +1286,36 @@
       "toggle": {
         "type": "write",
         "label": "Toggle Relay State",
+        "parameters": [],
         "returns": {
           "dataType": "void"
         },
         "purpose": "Toggles the relay state between ON and OFF"
       },
+      "switch": {
+        "type": "write",
+        "label": "Set Relay State",
+        "parameters": [
+          {
+            "name": "status",
+            "dataType": "Boolean",
+            "purpose": "Desired state of the relay (True for ON, False for OFF)"
+          }
+        ],
+        "returns": {
+          "dataType": "void"
+        },
+        "purpose": "Sets the relay state explicitly to ON or OFF"
+      },
       "is_on": {
         "type": "read",
         "label": "Check Relay State",
+        "parameters": [],
         "returns": {
           "dataType": "Boolean",
           "values_meaning": {
-            "true": "Relay On",
-            "false": "Relay Off"
+            "true": "Relay is ON",
+            "false": "Relay is OFF"
           }
         },
         "purpose": "Returns the current state of the relay (True if ON, False if OFF)"
@@ -1324,7 +1343,7 @@
         {
           "name": "simulate",
           "dataType": "Boolean",
-          "default": true,
+          "default": false,
           "values_meaning": {
             "true": "Relay behavior is simulated with console output",
             "false": "Relay controls actual GPIO pin"
@@ -1344,7 +1363,7 @@
         "required": true
       },
       "vcc": {
-        "purpose": "Voltage supply for the relay (typically 5V or 3.3V depending on the module)",
+        "purpose": "Voltage supply for the relay (typically 5 V or 3.3 V depending on the module)",
         "required": true
       },
       "relay_pin": {

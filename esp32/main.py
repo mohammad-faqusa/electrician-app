@@ -67,7 +67,6 @@ async def async_callback(topic, msg, retained):
 
     await client.publish('esp32/2/sender', '{}'.format(json.dumps(result)), qos = 1)
 
-
 async def conn_han(client):
     await client.subscribe('esp32/2/receiver', 1)
     
@@ -101,7 +100,6 @@ async def automation_loop():
             except Exception as e:
                 print("Automation error:", e)
                 
-
 async def publishMqttAutomation(outputDeviceId, outputMsg):
     await client.publish('esp32/{}/receiver'.format(outputDeviceId), json.dumps(outputMsg), qos = 1)
 async def runAutomation(automation):
@@ -145,7 +143,6 @@ def make_mqtt_cb(automation):
 
     # synchronous wrapper — **what you actually register**
     return lambda level: asyncio.create_task(_job(level))
-
 
 config['subs_cb'] = callback
 config['connect_coro'] = conn_han
