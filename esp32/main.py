@@ -1,18 +1,18 @@
-from motion_sensor import PIRSensor
 from led import InternalLED
+from ultrasonic_sensor import UltrasonicSensor
 
 # Initialise pins dictionary
 peripherals_pins = {
-    "motion sensor": {},
     "internal led": {},
+    "ultra sonic": {},
 }
 
 # Initialise peripherals dictionary
 peripherals = {}
 
 # Instantiate each peripheral
-peripherals["motion sensor"] = PIRSensor(pin=13)
 peripherals["internal led"] = InternalLED()
+peripherals["ultra sonic"] = UltrasonicSensor(trig_pin=13, echo_pin=12)
 
 
 import json
@@ -52,7 +52,7 @@ async def async_callback(topic, msg, retained):
         result['pins'] = peripherals_pins
         result['status'] = True
         result['commandId'] = msg['commandId']
-        await client.publish('esp32/7/sender', '{}'.format(json.dumps(result)), qos = 1)
+        await client.publish('esp32/1/sender', '{}'.format(json.dumps(result)), qos = 1)
         print("this is pins")
         return  # ✅ Terminate early
      
@@ -65,11 +65,11 @@ async def async_callback(topic, msg, retained):
     result['status'] = True
     result['commandId'] = msg['commandId']
 
-    await client.publish('esp32/7/sender', '{}'.format(json.dumps(result)), qos = 1)
+    await client.publish('esp32/1/sender', '{}'.format(json.dumps(result)), qos = 1)
 
 
 async def conn_han(client):
-    await client.subscribe('esp32/7/receiver', 1)
+    await client.subscribe('esp32/1/receiver', 1)
     
 async def main(client):
     await client.connect()
@@ -79,7 +79,7 @@ async def main(client):
 
     n = 0
     esp_status = {}
-    esp_status['id'] = 7
+    esp_status['id'] = 1
 
     while True:
         await asyncio.sleep(1)

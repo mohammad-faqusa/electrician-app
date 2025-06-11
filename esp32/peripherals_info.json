@@ -730,110 +730,65 @@
     "attributes": {
       "pin": {
         "dataType": "Number",
-        "purpose": "GPIO pin number connected to the Gas sensor"
+        "purpose": "GPIO pin number connected to the sensor"
       },
-      "analog": {
-        "dataType": "Boolean",
-        "default": true,
-        "values_meaning": {
-          "true": "Analog mode enabled (reads a range of values from 0 to 1023)",
-          "false": "Digital mode enabled (reads values 0 or 1)"
-        },
-        "purpose": "Specifies whether the sensor is working in analog or digital mode"
-      },
-      "simulate": {
-        "dataType": "Boolean",
-        "default": true,
-        "values_meaning": {
-          "true": "Simulation mode enabled (random gas level values)",
-          "false": "Reads actual data from the connected sensor"
-        },
-        "purpose": "Controls whether the sensor operates in simulation or real mode"
-      },
-      "_gas_level": {
+      "debounce_ms": {
         "dataType": "Number",
-        "access": "read-only",
-        "range": {
-          "min": 0,
-          "max": 1023
-        },
-        "default": 0,
-        "purpose": "Latest gas level reading. Range: 0 to 1023 (for analog mode) or 0/1 (for digital mode)"
+        "unit": "milliseconds",
+        "default": 20,
+        "purpose": "Debounce interval that filters out mechanical bounce"
       }
     },
     "methods": {
-      "read": {
+      "set_callback": {
+        "interrupt": true,
         "type": "read",
-        "label": "Read Gas Level",
-        "returns": {
-          "dataType": "Number",
-          "range": {
-            "min": 0,
-            "max": 1023
+        "label": "On Gas Trigger",
+        "parameters": [
+          {
+            "name": "callback",
+            "dataType": "Function",
+            "signature": "fn(gas: Boolean)",
+            "purpose": "Invoked after debounce; true when gas, false when no gas"
           }
-        },
-        "purpose": "Reads the current gas level from the sensor. Range: 0 to 1023 (analog) or 0/1 (digital)"
+        ],
+        "returns": { "dataType": "Void" },
+        "purpose": "Attach a user-supplied function to run on debounced state changes"
+      },
+      "deinit": {
+        "type": "write",
+        "label": "Disable Gas Sensor",
+        "returns": { "dataType": "Void" },
+        "purpose": "Detach the IRQ handler and release the GPIO"
       }
     },
     "constructor": {
-      "purpose": "Initializes the gas sensor, either in simulation mode or using a real analog/digital input pin.",
+      "purpose": "Create a debounced gas sensor detector and optionally register a callback.",
       "parameters": [
         {
           "name": "pin",
           "dataType": "Number",
-          "purpose": "GPIO pin number to which the gas sensor is connected"
+          "purpose": "GPIO pin number connected to the sensor"
         },
         {
-          "name": "analog",
-          "dataType": "Boolean",
-          "default": true,
-          "values_meaning": {
-            "true": "Uses analog pin and ADC to read varying gas levels",
-            "false": "Uses digital pin to detect gas presence (binary value)"
-          },
-          "purpose": "Determines if the sensor is analog or digital"
+          "name": "debounce_ms",
+          "dataType": "Number",
+          "default": 20,
+          "unit": "milliseconds",
+          "purpose": "Debounce interval to ignore spurious transitions"
         },
         {
-          "name": "simulate",
-          "dataType": "Boolean",
-          "default": true,
-          "values_meaning": {
-            "true": "Sensor values are simulated randomly",
-            "false": "Reads actual values from the connected hardware"
-          },
-          "purpose": "Controls whether the sensor operates in simulation or real mode"
+          "name": "callback",
+          "dataType": "Function",
+          "optional": true,
+          "signature": "fn(pressed: Boolean)",
+          "purpose": "Function to call after each debounced state change (true = pressed, false = released)"
         }
       ],
       "returns": {
         "dataType": "Object",
         "class": "GasSensor",
-        "purpose": "An instance of the GasSensor class ready for reading gas levels"
-      }
-    },
-    "pin_properties": {
-      "gnd": {
-        "purpose": "Ground connection for the gas sensor module",
-        "required": true
-      },
-      "vcc": {
-        "purpose": "Voltage supply for the gas sensor (typically 5V or 3.3V depending on the sensor)",
-        "required": true
-      },
-      "aout": {
-        "alias": "pin",
-        "purpose": "Analog output pin that provides gas concentration level (used if analog=true)",
-        "required": true,
-        "conditional_on": {
-          "analog": true
-        }
-      },
-      "dout": {
-        "alias": "pin",
-        "purpose": "Digital output pin that goes HIGH/LOW based on gas threshold (used if analog=false)",
-        "required": true,
-        "conditional_on": {
-          "analog": false
-        }
+        "purpose": "New GasSensor instance ready for debounced edge detection"
       }
     }
   },
