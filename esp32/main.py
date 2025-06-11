@@ -1,19 +1,18 @@
-from relay import Relay
+from motion_sensor import PIRSensor
+from led import InternalLED
 
 # Initialise pins dictionary
 peripherals_pins = {
-    "relay 1": {},
-    "relay 2": {},
-    "relay 3": {},
+    "motion sensor": {},
+    "internal led": {},
 }
 
 # Initialise peripherals dictionary
 peripherals = {}
 
 # Instantiate each peripheral
-peripherals["relay 1"] = Relay(pin=15)
-peripherals["relay 2"] = Relay(pin=2)
-peripherals["relay 3"] = Relay(pin=4)
+peripherals["motion sensor"] = PIRSensor(pin=13)
+peripherals["internal led"] = InternalLED()
 
 
 import json
@@ -53,7 +52,7 @@ async def async_callback(topic, msg, retained):
         result['pins'] = peripherals_pins
         result['status'] = True
         result['commandId'] = msg['commandId']
-        await client.publish('esp32/3/sender', '{}'.format(json.dumps(result)), qos = 1)
+        await client.publish('esp32/7/sender', '{}'.format(json.dumps(result)), qos = 1)
         print("this is pins")
         return  # ✅ Terminate early
      
@@ -66,11 +65,11 @@ async def async_callback(topic, msg, retained):
     result['status'] = True
     result['commandId'] = msg['commandId']
 
-    await client.publish('esp32/3/sender', '{}'.format(json.dumps(result)), qos = 1)
+    await client.publish('esp32/7/sender', '{}'.format(json.dumps(result)), qos = 1)
 
 
 async def conn_han(client):
-    await client.subscribe('esp32/3/receiver', 1)
+    await client.subscribe('esp32/7/receiver', 1)
     
 async def main(client):
     await client.connect()
@@ -80,7 +79,7 @@ async def main(client):
 
     n = 0
     esp_status = {}
-    esp_status['id'] = 3
+    esp_status['id'] = 7
 
     while True:
         await asyncio.sleep(1)
@@ -141,8 +140,13 @@ def make_mqtt_cb(automation):
         outputMsg['param'] = []
     
     async def _job(level):
-        if(level == automation['condition']):
+        if(automation['source'] == 'encoder'):
+            print('message is sent with angle : ', level)
+            outputMsg['param'] = [level] 
             await publishMqttAutomation(output_device_id, outputMsg)
+        elif(level == automation['condition']):
+            await publishMqttAutomation(output_device_id, outputMsg)
+            
 
     # synchronous wrapper — **what you actually register**
     return lambda level: asyncio.create_task(_job(level))
