@@ -1720,5 +1720,81 @@
         "required": true
       }
     }
+  },
+  {
+    "name": "oled_display",
+    "title": "OLED Display",
+    "library_name": "oled",
+    "class_name": "OLED",
+
+    "attributes": {
+      "width": {
+        "dataType": "Number",
+        "unit": "px",
+        "access": "read-only",
+        "default": 128,
+        "purpose": "Horizontal resolution (fixed)"
+      },
+      "height": {
+        "dataType": "Number",
+        "unit": "px",
+        "access": "read-only",
+        "default": 64,
+        "purpose": "Vertical resolution (fixed)"
+      }
+    },
+
+    "methods": {
+      "clear": {
+        "params": [],
+        "returns": "None",
+        "purpose": "Erase the entire display and refresh"
+      },
+      "write": {
+        "params": [
+          {
+            "name": "text",
+            "dataType": "String",
+            "purpose": "Text to render"
+          },
+          {
+            "name": "row",
+            "dataType": "Number",
+            "default": 0,
+            "range": { "min": 0, "max": 7 },
+            "purpose": "Target text row (0-based, each row = 8 px)"
+          }
+        ],
+        "returns": "None",
+        "purpose": "Clear the screen, then write the text on the specified row"
+      },
+      "write_line": {
+        "params": [
+          {
+            "name": "text",
+            "dataType": "String",
+            "purpose": "Text to render"
+          },
+          {
+            "name": "row",
+            "dataType": "Number",
+            "range": { "min": 0, "max": 7 },
+            "purpose": "Target text row (0-based, each row = 8 px)"
+          },
+          {
+            "name": "clear_line",
+            "dataType": "Boolean",
+            "default": true,
+            "values_meaning": {
+              "true": "Erase the row before writing",
+              "false": "Overwrite existing pixels without erasing"
+            },
+            "purpose": "Whether to clear that row before writing"
+          }
+        ],
+        "returns": "None",
+        "purpose": "Write text on a single row without affecting other rows"
+      }
+    }
   }
 ]
